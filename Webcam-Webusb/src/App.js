@@ -3,42 +3,61 @@ import './App.css';
 
 function App() {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [device, setDevice] = useState(null);
+  const [imageSrc, setImageSrc] = useState(null);
+  const [photoTaken, setPhotoTaken] = useState(false);
 
   async function connectUSBDevice() {
     try {
-      const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x0 }] }); // Ersetzen Sie 0x0 durch die tatsächliche vendorId Ihres USB-Geräts
+      const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x054C }] }); // Ersetzen Sie 0x054C (Sony Alpha7 III) durch die tatsächliche vendorId Ihres USB-Geräts
       await newDevice.open(); // Öffnen Sie das Gerät
       if (newDevice.configuration === null)
         await newDevice.selectConfiguration(1); // Wählen Sie eine Konfiguration, wenn notwendig
       await newDevice.claimInterface(0); // Beanspruchen Sie die erste Schnittstelle
       setDevice(newDevice);
       console.log('Device connected:', newDevice);
+      // Nachdem das USB-Gerät verbunden ist, erhalten wir die Kamera-ID und starten die Kamera
+      getCameraAccess(newDevice);
     } catch (error) {
       console.error('Error connecting USB device:', error);
     }
   }
 
-  async function getCameraAccess() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        videoRef.current.srcObject = stream;
-      } catch (error) {
-        console.error('Error accessing the camera:', error);
-        if (error.name === "NotAllowedError") {
-          alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
-        }
+  async function getCameraAccess(newDevice) {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      let selectedDeviceId;
+
+      // Wenn ein USB-Gerät verbunden ist, suchen wir nach einer Kamera mit der gleichen deviceId
+      if (newDevice) {
+        selectedDeviceId = videoDevices.find(device => device.label.includes(newDevice.productName))?.deviceId;
       }
-    } else {
-      alert('Die MediaDevices API wird von Ihrem Browser nicht unterstützt.');
-      console.error('MediaDevices API not supported by this browser.');
+
+      if (!selectedDeviceId && videoDevices.length > 0) {
+        selectedDeviceId = videoDevices[0].deviceId; // Fallback zur ersten Kamera
+      }
+
+      if (selectedDeviceId) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
+        videoRef.current.srcObject = stream;
+      } else {
+        alert('Keine Kamera gefunden.');
+      }
+    } catch (error) {
+      console.error('Error accessing the camera:', error);
+      if (error.name === "NotAllowedError") {
+        alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+      }
     }
   }
 
   useEffect(() => {
-    getCameraAccess();
+    if (cameraActive) {
+      getCameraAccess();
+    }
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
@@ -51,15 +70,52 @@ function App() {
     setCameraActive(prev => !prev);
   };
 
+  const takePicture = () => {
+    if (videoRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      setImageSrc(imageData);
+      setPhotoTaken(true);
+    }
+  };
+
+  const downloadImage = () => {
+    if (imageSrc) {
+      const link = document.createElement('a');
+      link.href = imageSrc;
+      link.download = 'captured_image.png';
+      link.click();
+    }
+  };
+
+  const retakePicture = () => {
+    setImageSrc(null);
+    setPhotoTaken(false);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>Live Camera Feed</h1>
-        <button onClick={handleCameraToggle}>
-          {cameraActive ? 'Kamera ausschalten' : 'Kamera einschalten'}
-        </button>
-        <button onClick={connectUSBDevice}>Connect USB Device</button>
-        {cameraActive && <video ref={videoRef} autoPlay playsInline />}
+        {!photoTaken ? (
+          <>
+            <button onClick={handleCameraToggle}>
+              {cameraActive ? 'Kamera ausschalten' : 'Kamera einschalten'}
+            </button>
+            <button onClick={connectUSBDevice}>Connect USB Device</button>
+            {cameraActive && <video ref={videoRef} autoPlay playsInline />}
+            <canvas ref={canvasRef} style={{ display: 'none' }} width="640" height="480"></canvas>
+            <button onClick={takePicture}>Take Picture</button>
+          </>
+        ) : (
+          <>
+            <img src={imageSrc} alt="Captured" />
+            <button onClick={downloadImage}>Download Image</button>
+            <button onClick={retakePicture}>Neues Foto</button>
+          </>
+        )}
       </header>
     </div>
   );
