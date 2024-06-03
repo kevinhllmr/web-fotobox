@@ -1,0 +1,74 @@
+Projektablaufplan mit Meilensteinen
+
+Meilenstein 1: Projektinitialisierung (2 Wochen)
+- Projektstart und Planung
+  - Projektbesprechung und Zieldefinition
+  - Erstellung des Projektplans und der Meilensteine
+  - Ressourcenplanung und Zuweisung der Aufgaben
+  - Anforderungsanalyse und Spezifikation
+
+Meilenstein 2: Basisinfrastruktur und Grundlegende Funktionen (4 Wochen)
+- Entwicklung der NFC-Kopplung
+  - Implementierung der NFC-Verbindung zwischen Fotobox und Smartphone
+  - Testen der NFC-Verbindung auf verschiedenen Geräten
+- Einrichtung der Entwicklungsumgebung
+  - Einrichtung der C# .NET 7.0 Serverumgebung
+  - Einrichtung des React-Frameworks für die Benutzeroberfläche
+- Grundlegende Fotofunktionalität
+  - Implementierung der Fotoaufnahmefunktion mit der integrierten Tablet-Kamera
+  - Basis-Benutzeroberfläche für die Steuerung der Fotobox
+
+Meilenstein 3: Datenübertragung und Echtzeitkommunikation (4 Wochen)
+- Implementierung der Datenübertragung
+  - Entwicklung der WebRTC-basierten Echtzeitkommunikation zwischen Fotobox und Endgerät
+  - Testen und Validieren der Echtzeitdatenübertragung
+- Serverseitige Implementierung
+  - Aufbau der serverseitigen Infrastruktur in C# .NET 7.0
+  - Implementierung grundlegender serverseitiger Funktionen und APIs
+
+Meilenstein 4: Benutzeroberfläche und Benutzerinteraktion (4 Wochen)
+- Erweiterung der Benutzeroberfläche
+  - Entwicklung der React-basierten Benutzeroberfläche für die Fotobox
+  - Implementierung eines responsiven Designs für verschiedene Geräte und Bildschirmgrößen
+- Integration des Tablets
+  - Integration eines Touchscreen-Tablets zur Steuerung der Fotobox
+  - Testen der Benutzeroberfläche und der Steuerung über das Tablet
+
+Meilenstein 5: Sicherheit und Kompatibilität (3 Wochen)
+- Sicherheitsmaßnahmen
+  - Implementierung von HTTPS zur sicheren Datenübertragung
+  - Implementierung einer sicheren Authentifizierung für Benutzer
+- Kompatibilitätstests
+  - Durchführung von Tests auf verschiedenen Browsern und Geräten
+  - Sicherstellung einer konsistenten Benutzererfahrung und Funktionalität
+
+Meilenstein 6: Erweiterte Funktionen und Fotoverarbeitung (4 Wochen)
+- Fotoherunterladen
+  - Implementierung der Funktion zum direkten Herunterladen von Fotos auf das Smartphone des Benutzers
+- Fotobearbeitung
+  - Entwicklung und Integration von Fotobearbeitungstools für Benutzer
+  - Testen der Fotobearbeitungsfunktionen
+- Unterstützung für externe Kamera
+  - Implementierung der WebUSB-Funktionalität zur Steuerung einer externen Spiegelreflexkamera
+  - Testen und Validieren der externen Kamerafunktion
+
+Meilenstein 7: Abschlusstests und Dokumentation (3 Wochen)
+- Endgültige Tests und Fehlerbehebung
+  - Durchführung umfangreicher Tests zur Identifikation und Behebung von Fehlern
+  - Validierung aller Funktionen und Sicherstellung der Gesamtqualität
+- Projektdokumentation
+  - Erstellung der Projektdokumentation, Benutzerhandbücher und technischen Dokumentationen
+  - Schulung und Übergabe an das Support-Team
+
+Meilenstein 8: Projektabschluss und Bereitstellung (2 Wochen)
+- Finale Bereitstellung
+  - Deployment der Anwendung in der Produktionsumgebung
+  - Sicherstellung des reibungslosen Betriebs und der Verfügbarkeit
+- Projektabschluss
+  - Abschlussbesprechung und Feedback-Runde
+  - Übergabe der finalen Dokumentation und Abschlussbericht
+
+Zusammenfassung
+- Gesamtdauer: 26 Wochen (ca. 6 Monate)
+- Meilensteine: 8
+- Wichtige Aspekte: NFC-Kopplung, Echtzeitdatenübertragung, Sicherheitsmaßnahmen, Kompatibilitätstests, Fotobearbeitung, Unterstützung für externe Kameras.
