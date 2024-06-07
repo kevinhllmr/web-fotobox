@@ -8,6 +8,9 @@ function App() {
   const [device, setDevice] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
+  const [videoStreamActive, setVideoStreamActive] = useState(false); // Neuer Zustand für Video-Stream
+  const [timerValue, setTimerValue] = useState(3); // Timer Slider value
+  const [countdown, setCountdown] = useState(0); // Countdown value
 
   async function connectUSBDevice() {
     try {
@@ -43,6 +46,7 @@ function App() {
       if (selectedDeviceId) {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
         videoRef.current.srcObject = stream;
+        setVideoStreamActive(true); // Video-Stream ist aktiv
       } else {
         alert('Keine Kamera gefunden.');
       }
@@ -57,6 +61,8 @@ function App() {
   useEffect(() => {
     if (cameraActive) {
       getCameraAccess();
+    } else {
+      setVideoStreamActive(false); // Video-Stream ist nicht aktiv
     }
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -68,6 +74,21 @@ function App() {
 
   const handleCameraToggle = () => {
     setCameraActive(prev => !prev);
+  };
+
+  const startCountdown = () => {
+    setCountdown(timerValue);
+    const interval = setInterval(() => {
+      setCountdown(prevCountdown => {
+        if (prevCountdown === 1) {
+          clearInterval(interval);
+          takePicture();
+          return 0;
+        } else {
+          return prevCountdown - 1;
+        }
+      });
+    }, 1000);
   };
 
   const takePicture = () => {
@@ -107,7 +128,20 @@ function App() {
             <button onClick={connectUSBDevice}>Connect USB Device</button>
             {cameraActive && <video ref={videoRef} autoPlay playsInline />}
             <canvas ref={canvasRef} style={{ display: 'none' }} width="640" height="480"></canvas>
-            <button onClick={takePicture}>Take Picture</button>
+            {videoStreamActive && (
+              <>
+                <input
+                  type="range"
+                  min="3"
+                  max="10"
+                  value={timerValue}
+                  onChange={(e) => setTimerValue(e.target.value)}
+                />
+                <span>{timerValue} Sekunden</span>
+                <button onClick={startCountdown}>Take Picture</button>
+              </>
+            )}
+            {countdown > 0 && <div className="countdown">{countdown}</div>}
           </>
         ) : (
           <>
@@ -122,3 +156,4 @@ function App() {
 }
 
 export default App;
+  
