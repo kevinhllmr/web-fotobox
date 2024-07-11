@@ -21,32 +21,40 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
 // Funktion zum Abrufen des Kamera-Zugriffs
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
   try {
+    console.log('Versuche, Kamerazugriff zu erhalten...');
     const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    let selectedDeviceId;
+    console.log('Gefundene Geräte:', devices);
 
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    console.log('Videogeräte:', videoDevices);
+
+    let selectedDeviceId;
     if (newDevice) {
       selectedDeviceId = videoDevices.find(device => device.label.includes(newDevice.productName))?.deviceId;
+      console.log('Ausgewähltes Gerät:', selectedDeviceId);
     }
 
     if (!selectedDeviceId && videoDevices.length > 0) {
       selectedDeviceId = videoDevices[0].deviceId;
+      console.log('Fallback-Gerät:', selectedDeviceId);
     }
 
     if (selectedDeviceId) {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
+      console.log('Erhaltener Stream:', stream);
       videoRef.current.srcObject = stream;
       setVideoStreamActive(true);
     } else {
       alert('Keine Kamera gefunden.');
     }
   } catch (error) {
-    console.error('Error accessing the camera:', error);
+    console.error('Fehler beim Zugriff auf die Kamera:', error);
     if (error.name === "NotAllowedError") {
       alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
     }
   }
 }
+
 
 // Funktion zum Umschalten der Kamera
 export function handleCameraToggle(setCameraActive) {
