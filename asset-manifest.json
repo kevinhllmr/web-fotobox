@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/web-fotobox/static/css/main.bd8ff07a.css",
+    "main.js": "/web-fotobox/static/js/main.153c757f.js",
+    "index.html": "/web-fotobox/index.html",
+    "main.bd8ff07a.css.map": "/web-fotobox/static/css/main.bd8ff07a.css.map",
+    "main.153c757f.js.map": "/web-fotobox/static/js/main.153c757f.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.bd8ff07a.css",
+    "static/js/main.153c757f.js"
+  ]
+}
