@@ -1,16 +1,16 @@
-// PhotoMode.js
-
 import React, { useRef, useEffect, useState } from 'react';
 import './PhotoMode.css';
-import { connectUSBDevice, getCameraAccess, handleCameraToggle, startCountdown, takePicture, downloadImage, retakePicture } from '../controllers/Controller.js';
+import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, retakePicture } from '../controllers/Controller.js';
+import Peripherie from '../controllers/Peripherie.js';
 
 function PhotoMode() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraActive, setCameraActive] = useState(true); // Kamera sofort aktiv
   const [device, setDevice] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
+  const [showButtons, setButtonsShown] = useState(true); // Buttons initially shown
   const [videoStreamActive, setVideoStreamActive] = useState(false);
   const [timerValue, setTimerValue] = useState(3);
   const [countdown, setCountdown] = useState(0);
@@ -27,45 +27,74 @@ function PhotoMode() {
         videoRef.current.srcObject = null;
       }
     };
-  }, [cameraActive]);
+  }, [cameraActive, device]);
+
+  useEffect(() => {
+    if (Peripherie.hasExternCamera) {
+      connectUSBDevice(setDevice, (device) => getCameraAccess(device, videoRef, setVideoStreamActive));
+    } else {
+      getCameraAccess(null, videoRef, setVideoStreamActive);
+    }
+  }, []);
+
+  const handleRetakePicture = () => {
+    setImageSrc(null);
+    setPhotoTaken(false);
+    setCameraActive(false);
+    setButtonsShown(true);
+    // Kleine Verzögerung einfügen, um die Kamera aus- und wieder einzuschalten
+    setTimeout(() => {
+      setCameraActive(true);
+    }, 1);
+  };
+
+  const startPhotoCountdown = () => {
+    setButtonsShown(false);
+    startCountdown(timerValue, setCountdown, () => takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken));
+  };
 
   return (
     <div className="PhotoMode">
+      <img id="bg" src={process.env.PUBLIC_URL + '/images/home-bg.png'} alt="Background" />
       <header className="App-header">
-        <h1>Live Camera Feed</h1>
         {!photoTaken ? (
           <>
-            <button onClick={() => handleCameraToggle(setCameraActive)}>
-              {cameraActive ? 'Kamera ausschalten' : 'Kamera einschalten'}
-            </button>
-            <button onClick={() => connectUSBDevice(setDevice, (device) => getCameraAccess(device, videoRef, setVideoStreamActive))}>
-              Connect USB Device
-            </button>
             {cameraActive && <video ref={videoRef} autoPlay playsInline />}
-            <canvas ref={canvasRef} style={{ display: 'none' }} width="640" height="480"></canvas>
-            {videoStreamActive && (
+            <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+            {videoStreamActive && showButtons && (
               <>
-                <input
-                  type="range"
-                  min="3"
-                  max="10"
-                  value={timerValue}
-                  onChange={(e) => setTimerValue(e.target.value)}
-                />
-                <span>{timerValue} Sekunden</span>
-                <button onClick={() => startCountdown(timerValue, setCountdown, () => takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken))}>
-                  Take Picture
-                </button>
+                <div className="button-container">
+                  <button className="start-button" onClick={startPhotoCountdown}>
+                    Start Countdown
+                  </button>
+                  <input
+                    type="range"
+                    min="3"
+                    max="10"
+                    value={timerValue}
+                    onChange={(e) => setTimerValue(e.target.value)}
+                  />
+                  <button className="end-button" onClick={() => handleRetakePicture()}>
+                    End Session
+                  </button>
+                </div>
               </>
             )}
             {countdown > 0 && <div className="countdown">{countdown}</div>}
           </>
         ) : (
           <>
-            <img src={imageSrc} alt="Captured" />
-            <button onClick={() => downloadImage(imageSrc)}>Download Image</button>
-            <button onClick={() => retakePicture(setImageSrc, setPhotoTaken)}>Neues Foto</button>
+            <img id="captured" src={imageSrc} alt="Captured" />
+            <div className="button-container">
+              <button className="start-button" onClick={() => downloadImage(imageSrc)}>Download Image</button>
+              <button className="end-button" onClick={handleRetakePicture}>Neues Foto</button>
+            </div>
           </>
+        )}
+        {!photoTaken && showButtons && (
+          <div className="footer-text">
+            Timer: {timerValue} Sekunden
+          </div>
         )}
       </header>
     </div>

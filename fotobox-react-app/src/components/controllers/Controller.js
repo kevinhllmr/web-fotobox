@@ -1,5 +1,3 @@
-// Controller.js
-
 import { useRef, useEffect, useState } from 'react';
 
 // Funktion zum Verbinden des USB-Geräts
@@ -55,7 +53,6 @@ export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive)
   }
 }
 
-
 // Funktion zum Umschalten der Kamera
 export function handleCameraToggle(setCameraActive) {
   setCameraActive(prev => !prev);
@@ -80,9 +77,13 @@ export function startCountdown(timerValue, setCountdown, takePicture) {
 // Funktion zum Aufnehmen eines Fotos
 export function takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken) {
   if (videoRef.current) {
+    const videoWidth = videoRef.current.videoWidth;
+    const videoHeight = videoRef.current.videoHeight;
     const canvas = canvasRef.current;
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
     const context = canvas.getContext('2d');
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
     const imageData = canvas.toDataURL('image/png');
     setImageSrc(imageData);
     setPhotoTaken(true);
