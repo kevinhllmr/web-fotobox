@@ -146,10 +146,25 @@
     font-size: 200%;
 }
 
+#cloud:hover {
+    cursor: pointer;
+    color: rgb(185, 185, 185);
+}
+
 #settings {
     text-align: right;
     float: right;
     font-size: 200%;
     padding: 20px;
     opacity: 0.25;
+}
+
+#settings:hover {
+    cursor: pointer;
+    opacity: 1.0;
+    color: rgb(185, 185, 185);
+}
+
+.tablet:hover {
+    cursor: pointer;
 }
