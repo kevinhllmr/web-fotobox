@@ -1,7 +1,7 @@
 {
   "name": "fotobox-react-app",
   "version": "1.0.0",
-  "homepage": "kevinhllmr.github.io/web-fotobox",
+  "homepage": "https://kevinhllmr.github.io/web-fotobox",
   "private": true,
   "dependencies": {
     "@antmedia/webrtc_adaptor": "^2.9.0",

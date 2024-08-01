@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/static/css/main.4b1b53aa.css",
-    "main.js": "/static/js/main.84b711ce.js",
-    "index.html": "/index.html",
-    "main.4b1b53aa.css.map": "/static/css/main.4b1b53aa.css.map",
-    "main.84b711ce.js.map": "/static/js/main.84b711ce.js.map"
+    "main.css": "/kevinhllmr.github.io/web-fotobox/static/css/main.4b1b53aa.css",
+    "main.js": "/kevinhllmr.github.io/web-fotobox/static/js/main.1c84020e.js",
+    "index.html": "/kevinhllmr.github.io/web-fotobox/index.html",
+    "main.4b1b53aa.css.map": "/kevinhllmr.github.io/web-fotobox/static/css/main.4b1b53aa.css.map",
+    "main.1c84020e.js.map": "/kevinhllmr.github.io/web-fotobox/static/js/main.1c84020e.js.map"
   },
   "entrypoints": [
     "static/css/main.4b1b53aa.css",
-    "static/js/main.84b711ce.js"
+    "static/js/main.1c84020e.js"
   ]
 }
