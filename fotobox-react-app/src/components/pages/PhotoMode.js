@@ -2,8 +2,10 @@ import React, { useRef, useEffect, useState } from 'react';
 import './PhotoMode.css';
 import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, retakePicture } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
+import { useNavigate } from 'react-router-dom';
 
 function PhotoMode() {
+  const navigate = useNavigate(); // Hinzufügen von useNavigate
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(true); // Kamera sofort aktiv
@@ -48,6 +50,11 @@ function PhotoMode() {
     }, 1);
   };
 
+  const handleEndSession = () => {
+    handleRetakePicture();
+    navigate('/home/'); // Navigiere zur MainPage
+  };
+
   const startPhotoCountdown = () => {
     setButtonsShown(false);
     startCountdown(timerValue, setCountdown, () => takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken));
@@ -74,7 +81,7 @@ function PhotoMode() {
                     value={timerValue}
                     onChange={(e) => setTimerValue(e.target.value)}
                   />
-                  <button className="end-button" onClick={() => handleRetakePicture()}>
+                  <button className="end-button" onClick={handleEndSession}> {/* angepasster Button */}
                     End Session
                   </button>
                 </div>
