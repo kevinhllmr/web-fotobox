@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/web-fotobox/static/css/main.bd8ff07a.css",
-    "main.js": "/web-fotobox/static/js/main.153c757f.js",
-    "index.html": "/web-fotobox/index.html",
-    "main.bd8ff07a.css.map": "/web-fotobox/static/css/main.bd8ff07a.css.map",
-    "main.153c757f.js.map": "/web-fotobox/static/js/main.153c757f.js.map"
+    "main.css": "/kevinhllmr.github.io/web-fotobox/static/css/main.4b1b53aa.css",
+    "main.js": "/kevinhllmr.github.io/web-fotobox/static/js/main.1c84020e.js",
+    "index.html": "/kevinhllmr.github.io/web-fotobox/index.html",
+    "main.4b1b53aa.css.map": "/kevinhllmr.github.io/web-fotobox/static/css/main.4b1b53aa.css.map",
+    "main.1c84020e.js.map": "/kevinhllmr.github.io/web-fotobox/static/js/main.1c84020e.js.map"
   },
   "entrypoints": [
-    "static/css/main.bd8ff07a.css",
-    "static/js/main.153c757f.js"
+    "static/css/main.4b1b53aa.css",
+    "static/js/main.1c84020e.js"
   ]
 }
