@@ -54,6 +54,14 @@ function MainPage() {
           // navigate(`/` + user_id + `/photomode/`);
           navigate(`/photomode/`);
         });
+
+      document.getElementById('cloud').addEventListener('click', function (event) {
+        navigate(`/cloud/`);
+      })
+
+      document.getElementById('settings').addEventListener('click', function (event) {
+        navigate(`/admin/`);
+      })
     }, []);
 
     async function toggleLanguage() {
