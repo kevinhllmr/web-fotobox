@@ -19,6 +19,7 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
 // Funktion zum Abrufen des Kamera-Zugriffs
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
   try {
+    await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
     console.log('Versuche, Kamerazugriff zu erhalten...');
     const devices = await navigator.mediaDevices.enumerateDevices();
     console.log('Gefundene Geräte:', devices);
