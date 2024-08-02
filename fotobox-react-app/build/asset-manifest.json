@@ -1,25 +1,13 @@
 {
   "files": {
-<<<<<<< HEAD
-    "main.css": "/static/css/main.4b1b53aa.css",
-    "main.js": "/static/js/main.3146dec1.js",
-    "index.html": "/index.html",
-    "main.4b1b53aa.css.map": "/static/css/main.4b1b53aa.css.map",
-    "main.3146dec1.js.map": "/static/js/main.3146dec1.js.map"
-  },
-  "entrypoints": [
-    "static/css/main.4b1b53aa.css",
-    "static/js/main.3146dec1.js"
-=======
-    "main.css": "/web-fotobox/static/css/main.4b1b53aa.css",
-    "main.js": "/web-fotobox/static/js/main.bf3e4b82.js",
+    "main.css": "/web-fotobox/static/css/main.42571f00.css",
+    "main.js": "/web-fotobox/static/js/main.98f81a8b.js",
     "index.html": "/web-fotobox/index.html",
-    "main.4b1b53aa.css.map": "/web-fotobox/static/css/main.4b1b53aa.css.map",
-    "main.bf3e4b82.js.map": "/web-fotobox/static/js/main.bf3e4b82.js.map"
+    "main.42571f00.css.map": "/web-fotobox/static/css/main.42571f00.css.map",
+    "main.98f81a8b.js.map": "/web-fotobox/static/js/main.98f81a8b.js.map"
   },
   "entrypoints": [
-    "static/css/main.4b1b53aa.css",
-    "static/js/main.bf3e4b82.js"
->>>>>>> fe4887279220cdb4c3617da8cab7107c0bb10464
+    "static/css/main.42571f00.css",
+    "static/js/main.98f81a8b.js"
   ]
 }

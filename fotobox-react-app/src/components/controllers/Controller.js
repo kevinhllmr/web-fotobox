@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
-    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x054C }] });
+    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x054C }] }); //0x054C für Sony a7 III
     await newDevice.open();
     if (newDevice.configuration === null)
       await newDevice.selectConfiguration(1);
@@ -19,7 +19,7 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
 // Funktion zum Abrufen des Kamera-Zugriffs
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
   try {
-    await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
+    await navigator.mediaDevices.getUserMedia({audio: false, video: true});
     console.log('Versuche, Kamerazugriff zu erhalten...');
     const devices = await navigator.mediaDevices.enumerateDevices();
     console.log('Gefundene Geräte:', devices);
