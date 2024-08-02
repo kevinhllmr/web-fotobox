@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/web-fotobox/static/css/main.42571f00.css",
-    "main.js": "/web-fotobox/static/js/main.493d1fec.js",
+    "main.js": "/web-fotobox/static/js/main.98f81a8b.js",
     "index.html": "/web-fotobox/index.html",
     "main.42571f00.css.map": "/web-fotobox/static/css/main.42571f00.css.map",
-    "main.493d1fec.js.map": "/web-fotobox/static/js/main.493d1fec.js.map"
+    "main.98f81a8b.js.map": "/web-fotobox/static/js/main.98f81a8b.js.map"
   },
   "entrypoints": [
     "static/css/main.42571f00.css",
-    "static/js/main.493d1fec.js"
+    "static/js/main.98f81a8b.js"
   ]
 }
