@@ -5,6 +5,7 @@ import MainPage from './components/pages/MainPage';
 import PhotoMode from './components/pages/PhotoMode';
 import AdminSettings from './components/pages/AdminSettings';
 import CloudAccess from './components/pages/CloudAccess';
+import NFCComponent from "./components/pages/NFCComponent";
 
 const App = () => {
 
@@ -15,6 +16,7 @@ const App = () => {
           <Route path='' exact Component={MainPage} />
           <Route path='/home/' exact Component={MainPage} />
           <Route path='/photomode/' exact Component={PhotoMode} />
+          <Route path='/nfccomponent/' exact Component={NFCComponent} />
           <Route path='/cloud/' exact Component={CloudAccess} />
           <Route path='/admin/' exact Component={AdminSettings} />
         </Routes>
