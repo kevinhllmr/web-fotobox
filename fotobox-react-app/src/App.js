@@ -7,7 +7,6 @@ import ConnectPhone from './components/pages/ConnectPhone';
 import RemoteControl from './components/pages/RemoteControl';
 import AdminSettings from './components/pages/AdminSettings';
 import CloudAccess from './components/pages/CloudAccess';
-import NFCComponent from "./components/pages/NFCComponent";
 
 const App = () => {
 
@@ -20,8 +19,6 @@ const App = () => {
           <Route path='/photomode/' exact Component={PhotoMode} />
           <Route path='/connectphone/' exact Component={ConnectPhone} />
           <Route path='/remote/' exact Component={RemoteControl} />
-          <Route path='/nfccomponent/' exact Component={NFCComponent} />
-
           <Route path='/cloud/' exact Component={CloudAccess} />
           <Route path='/admin/' exact Component={AdminSettings} />
         </Routes>

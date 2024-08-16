@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import '../../App.css'
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -60,10 +61,6 @@ function MainPage() {
           navigate(`/connectphone/`);
         });
 
-      document.getElementsByClassName('nfc')[0]
-        .addEventListener('click', function(event){
-        navigate('/nfccomponent/');
-      
       document.getElementById('cloud').addEventListener('click', function (event) {
         navigate(`/cloud/`);
       })
