@@ -17,6 +17,16 @@ function PhotoMode() {
   const [timerValue, setTimerValue] = useState(3);
   const [countdown, setCountdown] = useState(0);
 
+  const isMobile = width <= 768;
+  // mit isMobile überprüfen, ob Nutzer Smartphone als Remote Control benutzt
+
+  // wenn **Datenkanal besteht**, Buttons auf Tablet ausblenden
+  // wenn isMobile, dann Buttons zur Steuerung auf Smartphone anzeigen
+
+  // wenn **kein Datenkanal besteht**, dann Steuerung der Fotobox nur über Tablet
+  // Buttons auf Tablet anzeigen
+  // wenn isMobile, dann dem Nutzer anzeigen, dass er nicht mit Fotobox verbunden ist 
+
   useEffect(() => {
     if (cameraActive) {
       getCameraAccess(device, videoRef, setVideoStreamActive);

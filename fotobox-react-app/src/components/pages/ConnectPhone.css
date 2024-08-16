@@ -1,0 +1,20 @@
+.mobile .chat, .desktop .chat {
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.message {
+    padding: 8px;
+    margin: 4px;
+    border-radius: 4px;
+}
+
+.message.you {
+    color: whitesmoke;
+    background-color: #ad3595;
+}
+
+.message.remote {
+    color: whitesmoke;
+    background-color: #17849d; 
+}

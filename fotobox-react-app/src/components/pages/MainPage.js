@@ -55,6 +55,11 @@ function MainPage() {
           navigate(`/photomode/`);
         });
 
+      document.getElementsByClassName('phone')[0]
+        .addEventListener('click', function (event) {
+          navigate(`/connectphone/`);
+        });
+
       document.getElementById('cloud').addEventListener('click', function (event) {
         navigate(`/cloud/`);
       })
@@ -98,9 +103,10 @@ function MainPage() {
           </div>
 
           <div className="main-content">
-              <p id='nfc-text'>Tap Your<br></br>Phone Here</p>
-              <img src={process.env.PUBLIC_URL + '/images/nfc-icon.svg'} alt="NFC" id="nfc-icon" />
-
+            <div className="phone">
+                <p id='nfc-text'>Tap Your<br></br>Phone Here</p>
+                <img src={process.env.PUBLIC_URL + '/images/nfc-icon.svg'} alt="NFC" id="nfc-icon" />
+              </div>
             <div className="tablet">
               <p id='tablet-text'>Use Tablet</p>
               <img src={process.env.PUBLIC_URL + '/images/tablet-icon.svg'} alt="Tablet" id="tablet-icon" />
