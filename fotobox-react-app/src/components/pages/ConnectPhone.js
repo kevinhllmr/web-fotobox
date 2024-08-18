@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { createPeer, createAnswer, setRemoteDescription, sendMessage, copyToClipboard } from '../controllers/WebRTC'; // Adjust the import path
 import '../../App.css';
 import './ConnectPhone.css'
-import { FaCopy } from 'react-icons/fa';
+import { FaCopy,FaWifi } from 'react-icons/fa';
+import { handleScan, handleWrite } from '../controllers/WebNFC';
 
 const ConnectPhone = () => {
     const [width, setWidth] = useState(window.innerWidth);
@@ -24,9 +25,8 @@ const ConnectPhone = () => {
     // wenn Datenkanal aufgebaut wurde, Nutzer auf
     // navigate(`/photomode/`);
     // weiterleiten
-
+   
     useEffect(() => {
-
         function handleWindowSizeChange() {
             setWidth(window.innerWidth);
         }
@@ -37,6 +37,16 @@ const ConnectPhone = () => {
 
     useEffect(() => {
         if (!isMobile) {
+            if ('NDEFReader' in window) {
+                try {
+                  const nfc = new NFC();
+                  console.log('NFC is available');
+                } catch (error) {
+                  console.warn('NFC Initialization fail:', error);
+                }
+              } else {
+                alert('NFC is unavailable');
+            }
             const newPeer = createPeer(
                 true,
                 (data) => {
@@ -54,7 +64,18 @@ const ConnectPhone = () => {
                 }
             );
             setPeer(newPeer);
-        } 
+        } else {
+            if ('NDEFReader' in window) {
+                try {
+                  const nfc = new NFC();
+                  console.log('NFC is available');
+                } catch (error) {
+                  console.warn('NFC Initialization fail:', error);
+                }
+              } else {
+                alert('NFC is unavailable');
+            }
+        }
     }, [isMobile]);
 
     const handleGenerateAnswer = () => {
@@ -120,6 +141,9 @@ const ConnectPhone = () => {
                     <button className="copy-icon" onClick={() => copyToClipboard(offer)}>
                         <FaCopy />
                     </button>
+                    <button className="copy-icon" onClick={() => handleWrite(offer)}>
+                        <FaWifi />
+                    </button>
                 </div>
                 <div className="answer">
                     <label>Answer JSON:</label>
@@ -132,6 +156,9 @@ const ConnectPhone = () => {
                     />
                     <button className="copy-icon" onClick={() => copyToClipboard(answer)}>
                         <FaCopy />
+                    </button>
+                    <button className="copy-icon" onClick={() => handleScan(answer)}>
+                        <FaWifi />
                     </button>
                 </div>
                 {!isMobile && (
