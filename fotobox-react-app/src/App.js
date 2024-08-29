@@ -8,7 +8,7 @@ import RemoteControl from './components/pages/RemoteControl';
 import AdminSettings from './components/pages/AdminSettings';
 import CloudAccess from './components/pages/CloudAccess';
 import AdminPage from './components/pages/Settings';  // Importiere die Seite, die nach dem Login angezeigt werden soll
-import ProtectedRoute from './components/controllers/Controller';  // Importiere die geschützte Route
+import { ProtectedRoute }from './components/controllers/Controller';  // Importiere die geschützte Route
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);  // Zustand für Authentifizierung
