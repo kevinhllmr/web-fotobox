@@ -23,6 +23,7 @@ export const handleWrite = async (message) => {
   try {
     if ('NDEFWriter' in window) {
       const ndef = new NDEFWriter(); 
+      console.log(message)
       await ndef.write(message);
       alert("Successfully wrote data to NFC tag!");
     } else {

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPeer, createAnswer, setRemoteDescription, sendMessage, copyToClipboard } from '../controllers/WebRTC'; // Adjust the import path
 import '../../App.css';
-import './ConnectPhone.css'
-import { FaCopy,FaWifi } from 'react-icons/fa';
+import './ConnectPhone.css';
+import { FaCopy, FaWifi } from 'react-icons/fa';
 import { handleScan, handleWrite } from '../controllers/WebNFC';
 
 const ConnectPhone = () => {
@@ -18,14 +18,6 @@ const ConnectPhone = () => {
 
     const isMobile = width <= 768;
 
-    // nur als Beispiel, um Datenkanal zwischen Tablet und Smartphone aufzubauen
-    // anstatt JSON-Text hin- und herzukopieren, Offer und Answer per WebNFC übertragen
-   
-    // let navigate = useNavigate();
-    // wenn Datenkanal aufgebaut wurde, Nutzer auf
-    // navigate(`/photomode/`);
-    // weiterleiten
-   
     useEffect(() => {
         function handleWindowSizeChange() {
             setWidth(window.innerWidth);
@@ -39,7 +31,7 @@ const ConnectPhone = () => {
         if (!isMobile) {
             if ('NDEFReader' in window) {
                 try {
-                  const nfc = new NFC();
+                  const nfc = new NDEFReader();
                   console.log('NFC is available');
                 } catch (error) {
                   console.warn('NFC Initialization fail:', error);
@@ -67,7 +59,7 @@ const ConnectPhone = () => {
         } else {
             if ('NDEFReader' in window) {
                 try {
-                  const nfc = new NFC();
+                  const nfc = new NDEFReader();
                   console.log('NFC is available');
                 } catch (error) {
                   console.warn('NFC Initialization fail:', error);
@@ -127,6 +119,16 @@ const ConnectPhone = () => {
         }
     };
 
+    const handleWriteOfferToNFC = () => {
+        if (offer.trim() !== '') {
+            handleWrite(offer)
+                .then(() => alert('Successfully wrote offer to NFC tag!'))
+                .catch(error => console.error('Failed to write offer to NFC:', error));
+        } else {
+            alert('Offer is empty. Please enter a valid offer to write.');
+        }
+    };
+
     return (
         <div className={isMobile ? "mobile" : "desktop"}>
             <h1>{isMobile ? "Mobile App" : "Desktop App"}</h1>
@@ -141,7 +143,7 @@ const ConnectPhone = () => {
                     <button className="copy-icon" onClick={() => copyToClipboard(offer)}>
                         <FaCopy />
                     </button>
-                    <button className="copy-icon" onClick={() => handleWrite(offer)}>
+                    <button className="copy-icon" onClick={handleWriteOfferToNFC}>
                         <FaWifi />
                     </button>
                 </div>
