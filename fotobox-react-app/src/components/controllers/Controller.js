@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
@@ -105,4 +106,22 @@ export function downloadImage(imageSrc) {
 export function retakePicture(setImageSrc, setPhotoTaken) {
   setImageSrc(null);
   setPhotoTaken(false);
+}
+
+class AdminSettingsController {
+  constructor() {
+      this.validUsername = "Novotrend Nöthen";
+      this.validPassword = "ASDjkl159";
+  }
+
+  validateLogin(username, password) {
+      return username === this.validUsername && password === this.validPassword;
+  }
+}
+
+export default AdminSettingsController;
+
+// ProtectedRoute-Komponente
+export function ProtectedRoute({ isAuthenticated, children }) {
+    return isAuthenticated ? children : <Navigate to="/home" />;
 }

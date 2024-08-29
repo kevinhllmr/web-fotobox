@@ -17,7 +17,7 @@ function PhotoMode() {
   const [timerValue, setTimerValue] = useState(3);
   const [countdown, setCountdown] = useState(0);
 
-  const isMobile = width <= 768;
+  //const isMobile = width <= 768;
   // mit isMobile überprüfen, ob Nutzer Smartphone als Remote Control benutzt
 
   // wenn **Datenkanal besteht**, Buttons auf Tablet ausblenden
