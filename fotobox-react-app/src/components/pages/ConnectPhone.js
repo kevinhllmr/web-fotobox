@@ -129,6 +129,9 @@ const ConnectPhone = () => {
         }
     };
 
+    const handleScanAnswerFromNFC = async () => {
+        await handleScan(setAnswer); 
+    };
     return (
         <div className={isMobile ? "mobile" : "desktop"}>
             <h1>{isMobile ? "Mobile App" : "Desktop App"}</h1>
@@ -159,7 +162,7 @@ const ConnectPhone = () => {
                     <button className="copy-icon" onClick={() => copyToClipboard(answer)}>
                         <FaCopy />
                     </button>
-                    <button className="copy-icon" onClick={() => handleScan(answer)}>
+                    <button className="copy-icon" onClick={() => handleScanAnswerFromNFC}>
                         <FaWifi />
                     </button>
                 </div>

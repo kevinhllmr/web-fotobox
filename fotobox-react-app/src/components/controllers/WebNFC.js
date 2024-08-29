@@ -9,6 +9,7 @@ export const handleScan = async (setAnswer) => {
         for (const record of event.message.records) {
           message += decoder.decode(record.data);
         }
+        console.log(message)
         setAnswer(message); 
       };
     } else {
