@@ -1,32 +1,22 @@
 import React, { useRef, useEffect, useState } from 'react';
 import '../../App.css';
 import './PhotoMode.css';
-import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, retakePicture } from '../controllers/Controller.js';
+import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, retakePicture, uploadImageToCloud } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
 import { useNavigate } from 'react-router-dom';
 
 function PhotoMode() {
-  const navigate = useNavigate(); // Hinzufügen von useNavigate
+  const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [cameraActive, setCameraActive] = useState(true); // Kamera sofort aktiv
+  const [cameraActive, setCameraActive] = useState(true); 
   const [device, setDevice] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
-  const [showButtons, setButtonsShown] = useState(true); // Buttons initially shown
+  const [showButtons, setButtonsShown] = useState(true); 
   const [videoStreamActive, setVideoStreamActive] = useState(false);
   const [timerValue, setTimerValue] = useState(3);
   const [countdown, setCountdown] = useState(0);
-
-  //const isMobile = width <= 768;
-  // mit isMobile überprüfen, ob Nutzer Smartphone als Remote Control benutzt
-
-  // wenn **Datenkanal besteht**, Buttons auf Tablet ausblenden
-  // wenn isMobile, dann Buttons zur Steuerung auf Smartphone anzeigen
-
-  // wenn **kein Datenkanal besteht**, dann Steuerung der Fotobox nur über Tablet
-  // Buttons auf Tablet anzeigen
-  // wenn isMobile, dann dem Nutzer anzeigen, dass er nicht mit Fotobox verbunden ist 
 
   useEffect(() => {
     if (cameraActive) {
@@ -55,7 +45,6 @@ function PhotoMode() {
     setPhotoTaken(false);
     setCameraActive(false);
     setButtonsShown(true);
-    // Kleine Verzögerung einfügen, um die Kamera aus- und wieder einzuschalten
     setTimeout(() => {
       setCameraActive(true);
     }, 1);
@@ -63,12 +52,21 @@ function PhotoMode() {
 
   const handleEndSession = () => {
     handleRetakePicture();
-    navigate('/home/'); // Navigiere zur MainPage
+    navigate('/home/');
   };
 
   const startPhotoCountdown = () => {
     setButtonsShown(false);
     startCountdown(timerValue, setCountdown, () => takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken));
+  };
+
+  const handleSavePicture = () => {
+    if (Peripherie.cloudAccess) {
+      uploadImageToCloud(imageSrc); // Bild in die Cloud hochladen
+    } else {
+      downloadImage(imageSrc); // Bild herunterladen
+      uploadImageToCloud(imageSrc); // Bild in die Cloud hochladen
+    }
   };
 
   return (
@@ -92,7 +90,7 @@ function PhotoMode() {
                     value={timerValue}
                     onChange={(e) => setTimerValue(e.target.value)}
                   />
-                  <button className="end-button" onClick={handleEndSession}> {/* angepasster Button */}
+                  <button className="end-button" onClick={handleEndSession}>
                     End Session
                   </button>
                   {!photoTaken && showButtons && (
@@ -109,7 +107,7 @@ function PhotoMode() {
           <>
             <img id="captured" src={imageSrc} alt="Captured" />
             <div className="button-container">
-              <button className="start-button" onClick={() => downloadImage(imageSrc)}>Download Image</button>
+              <button className="start-button" onClick={handleSavePicture}>Save Picture</button>
               <button className="end-button" onClick={handleRetakePicture}>Neues Foto</button>
             </div>
           </>

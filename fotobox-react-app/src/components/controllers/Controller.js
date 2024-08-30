@@ -99,7 +99,12 @@ export function downloadImage(imageSrc) {
   if (imageSrc) {
     const link = document.createElement('a');
     link.href = imageSrc;
-    link.download = 'captured_image.png';
+    
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+    const fileName = `${formattedDate}.png`;
+
+    link.download = fileName;
     link.click();
   }
 }
@@ -124,19 +129,21 @@ class AdminSettingsController {
   // Funktion zum Umschalten der externen Kamera
   toggleExternCamera() {
     Peripherie.hasExternCamera = !Peripherie.hasExternCamera;  // Umschalten des Werts
-    console.log('Externe Kamera Status:', Peripherie.hasExternCamera);
+  }
+
+  // Funktion zum Umschalten des Cloud Access
+  toggleCloudAccess() {
+    Peripherie.cloudAccess = !Peripherie.cloudAccess;  // Umschalten des Werts
   }
 
   // Funktion zum Aktualisieren der Vendor ID
   updateVendorID(newVendorID) {
     Peripherie.vendorID = newVendorID;  // Aktualisiere die Vendor ID
-    console.log('Aktualisierte Vendor ID:', `0x${Peripherie.vendorID.toString(16).toUpperCase()}`);
   }
 
   // Funktion zum Aktualisieren der Cloud-Adresse
   updateCloudAddress(newAddress) {
     Peripherie.cloudAdress = newAddress;  // Aktualisiere die Cloud-Adresse
-    console.log('Aktualisierte Cloud-Adresse:', Peripherie.cloudAdress);
   }
 }
 
@@ -146,3 +153,43 @@ export default AdminSettingsController;
 export function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/home" />;
 }
+
+
+// Funktion zum Hochladen des Bildes zur Cloud
+export async function uploadImageToCloud(imageSrc) {
+  if (Peripherie.cloudAccess && imageSrc) {
+    try {
+      // Erstelle den Dateinamen im gewünschten Format: YYYY-MM-DD HH:MM:SS.SSS.png
+      const now = new Date();
+      const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+      const fileName = `${formattedDate}.png`;
+
+      // Upload des Bildes an die Cloud-Adresse
+      const response = await fetch(Peripherie.cloudAdress, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          image: imageSrc, 
+          name: fileName  // Sende den formatierten Dateinamen
+        })
+      });
+
+      if (response.ok) {
+        console.log(`Bild erfolgreich in die Cloud hochgeladen: ${fileName}`);
+        alert(`Bild erfolgreich in die Cloud hochgeladen: ${fileName}`);
+      } else {
+        console.error('Fehler beim Hochladen des Bildes:', response.statusText);
+        alert('Fehler beim Hochladen des Bildes.');
+      }
+    } catch (error) {
+      console.error('Fehler beim Hochladen des Bildes:', error);
+      alert('Fehler beim Hochladen des Bildes.');
+    }
+  } else {
+    alert('Cloud-Zugriff ist deaktiviert oder kein Bild vorhanden.');
+  }
+}
+
+

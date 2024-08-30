@@ -9,14 +9,20 @@ function Settings({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const controller = new AdminSettingsController();  // Controller instanziieren
 
-  // Zustand für den Schalter
+  // Zustand für die Schalter
   const [isCameraOn, setIsCameraOn] = useState(Peripherie.hasExternCamera);
+  const [isCloudAccessOn, setIsCloudAccessOn] = useState(Peripherie.cloudAccess); // Zustand für Cloud Access
   const [vendorID, setVendorID] = useState(`0x${Peripherie.vendorID.toString(16).toUpperCase()}`);  // In String umwandeln
   const [cloudAdress, setCloudAdress] = useState(Peripherie.cloudAdress);
 
-  const handleToggle = () => {
+  const handleToggleCamera = () => {
     setIsCameraOn(!isCameraOn);  // Toggle-Zustand wechseln
     controller.toggleExternCamera();  // Verwende den Controller, um die Daten in Peripherie zu aktualisieren
+  };
+
+  const handleToggleCloudAccess = () => {
+    setIsCloudAccessOn(!isCloudAccessOn);  // Toggle-Zustand wechseln
+    controller.toggleCloudAccess();  // Verwende den Controller, um die Daten in Peripherie zu aktualisieren
   };
 
   const handleVendorIDChange = (e) => {
@@ -73,9 +79,9 @@ function Settings({ setIsAuthenticated }) {
         <h2>Admin Einstellungen</h2>
         <div className="settings-item">
           <label>Externe Kamera</label>
-          {/* Toggle-Switch */}
+          {/* Toggle-Switch für Externe Kamera */}
           <label className="switch">
-            <input type="checkbox" checked={isCameraOn} onChange={handleToggle} />
+            <input type="checkbox" checked={isCameraOn} onChange={handleToggleCamera} />
             <span className="slider"></span>
           </label>
         </div>
@@ -93,17 +99,29 @@ function Settings({ setIsAuthenticated }) {
             <button onClick={handleVendorIDUpdate}>Aktualisieren</button>
           </div>
         )}
-        
+
         <div className="settings-item">
-          <label>Cloud Adresse:</label>
-          <input 
-            type="text" 
-            placeholder="https://cloud.hs-anhalt.de/" 
-            value={cloudAdress}
-            onChange={(e) => setCloudAdress(e.target.value)}  // Setze den Cloud-Adresse Zustand
-          />
-          <button onClick={handleCloudAdressChange}>Eingabe</button>
+          <label>Cloud Access</label>
+          {/* Toggle-Switch für Cloud Access */}
+          <label className="switch">
+            <input type="checkbox" checked={isCloudAccessOn} onChange={handleToggleCloudAccess} />
+            <span className="slider"></span>
+          </label>
         </div>
+
+        {/* Anzeige der Cloud Adresse nur wenn Cloud Access aktiv ist */}
+        {isCloudAccessOn && (
+          <div className="settings-item">
+            <label>Cloud Adresse:</label>
+            <input 
+              type="text" 
+              placeholder="https://cloud.hs-anhalt.de/" 
+              value={cloudAdress}
+              onChange={(e) => setCloudAdress(e.target.value)}  // Setze den Cloud-Adresse Zustand
+            />
+            <button onClick={handleCloudAdressChange}>Eingabe</button>
+          </div>
+        )}
 
         {/* Button zum Anzeigen aller Peripherie-Daten */}
         <div className="settings-item">
