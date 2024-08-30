@@ -5,18 +5,23 @@ import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
-    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: Peripherie.vendorID }] }); // Verwende die Vendor ID aus Peripherie
+    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: Peripherie.vendorID }] });
     await newDevice.open();
-    if (newDevice.configuration === null)
+    if (newDevice.configuration === null) {
       await newDevice.selectConfiguration(1);
+    }
     await newDevice.claimInterface(0);
     setDevice(newDevice);
     console.log('Device connected:', newDevice);
     getCameraAccess(newDevice);
   } catch (error) {
     console.error('Error connecting USB device:', error);
+    if (error.name === 'SecurityError') {
+      alert('Zugriff auf USB-Gerät verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+    }
   }
 }
+
 
 // Funktion zum Abrufen des Kamera-Zugriffs
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
@@ -71,13 +76,6 @@ export async function retryUSBDeviceConnection() {
   }
 }
 
-// Funktion zum Trennen der internen Kamera, wenn eine externe USB-Kamera verbunden ist
-export function disconnectInternalCamera() {
-  if (Peripherie.hasExternCamera) {
-    navigator.mediaDevices.getUserMedia({ video: false }); // Deaktiviere die interne Kamera
-    console.log('Interne Kamera deaktiviert.');
-  }
-}
 
 // Funktion zum Umschalten der Kamera
 export function handleCameraToggle(setCameraActive) {

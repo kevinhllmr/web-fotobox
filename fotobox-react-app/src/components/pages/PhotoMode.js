@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import '../../App.css';
 import './PhotoMode.css';
-import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, uploadImageToCloud, retryUSBDeviceConnection, disconnectInternalCamera } from '../controllers/Controller.js';
+import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, uploadImageToCloud, retryUSBDeviceConnection} from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,7 +25,6 @@ function PhotoMode() {
         getCameraAccess(device, videoRef, setVideoStreamActive)
           .catch(() => retryUSBDeviceConnection());  // Fehler abfangen und erneut versuchen
       });
-      disconnectInternalCamera();  // Interne Kamera trennen
     } else {
       // Interne Kamera verwenden
       getCameraAccess(null, videoRef, setVideoStreamActive);
