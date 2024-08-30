@@ -74,16 +74,17 @@
     text-align: center;
     color: white;
     font-size: 2rem;
+    bottom: 5%; /* Abstand vom unteren Rand erhöhen */
 }
 
 
 .PhotoMode .button-container {
+    position: fixed;
     display: flex;
     justify-content: space-between;
     width: 100%;
     padding: 50px;
-    position: absolute;
-    bottom: 0;
+    bottom: 0%; 
     z-index: 2;
     opacity : 0.9
 }

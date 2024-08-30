@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import '../../App.css';
 import './PhotoMode.css';
 import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, retakePicture } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
@@ -94,6 +95,11 @@ function PhotoMode() {
                   <button className="end-button" onClick={handleEndSession}> {/* angepasster Button */}
                     End Session
                   </button>
+                  {!photoTaken && showButtons && (
+                    <div className="footer-text">
+                      Timer: {timerValue} Sekunden
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -107,11 +113,6 @@ function PhotoMode() {
               <button className="end-button" onClick={handleRetakePicture}>Neues Foto</button>
             </div>
           </>
-        )}
-        {!photoTaken && showButtons && (
-          <div className="footer-text">
-            Timer: {timerValue} Sekunden
-          </div>
         )}
       </header>
     </div>
