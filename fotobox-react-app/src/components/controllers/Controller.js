@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
+
 
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
@@ -108,14 +110,33 @@ export function retakePicture(setImageSrc, setPhotoTaken) {
   setPhotoTaken(false);
 }
 
+
 class AdminSettingsController {
   constructor() {
-      this.validUsername = "Novotrend Nöthen";
-      this.validPassword = "ASDjkl159";
+    this.validUsername = "Novotrend Nöthen";
+    this.validPassword = "ASDjkl159";
   }
 
   validateLogin(username, password) {
-      return username === this.validUsername && password === this.validPassword;
+    return username === this.validUsername && password === this.validPassword;
+  }
+
+  // Funktion zum Umschalten der externen Kamera
+  toggleExternCamera() {
+    Peripherie.hasExternCamera = !Peripherie.hasExternCamera;  // Umschalten des Werts
+    console.log('Externe Kamera Status:', Peripherie.hasExternCamera);
+  }
+
+  // Funktion zum Aktualisieren der Vendor ID
+  updateVendorID(newVendorID) {
+    Peripherie.vendorID = newVendorID;  // Aktualisiere die Vendor ID
+    console.log('Aktualisierte Vendor ID:', `0x${Peripherie.vendorID.toString(16).toUpperCase()}`);
+  }
+
+  // Funktion zum Aktualisieren der Cloud-Adresse
+  updateCloudAddress(newAddress) {
+    Peripherie.cloudAdress = newAddress;  // Aktualisiere die Cloud-Adresse
+    console.log('Aktualisierte Cloud-Adresse:', Peripherie.cloudAdress);
   }
 }
 
@@ -123,5 +144,5 @@ export default AdminSettingsController;
 
 // ProtectedRoute-Komponente
 export function ProtectedRoute({ isAuthenticated, children }) {
-    return isAuthenticated ? children : <Navigate to="/home" />;
+  return isAuthenticated ? children : <Navigate to="/home" />;
 }
