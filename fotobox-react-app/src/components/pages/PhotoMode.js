@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import '../../App.css';
 import './PhotoMode.css';
-import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, retakePicture, uploadImageToCloud } from '../controllers/Controller.js';
+import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, uploadImageToCloud, retryUSBDeviceConnection, disconnectInternalCamera } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,7 +9,7 @@ function PhotoMode() {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [cameraActive, setCameraActive] = useState(true); 
+  const [cameraActive, setCameraActive] = useState(true);
   const [device, setDevice] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
@@ -19,11 +19,18 @@ function PhotoMode() {
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    if (cameraActive) {
-      getCameraAccess(device, videoRef, setVideoStreamActive);
+    if (Peripherie.hasExternCamera) {
+      // USB-Gerät verwenden
+      connectUSBDevice(setDevice, (device) => {
+        getCameraAccess(device, videoRef, setVideoStreamActive)
+          .catch(() => retryUSBDeviceConnection());  // Fehler abfangen und erneut versuchen
+      });
+      disconnectInternalCamera();  // Interne Kamera trennen
     } else {
-      setVideoStreamActive(false);
+      // Interne Kamera verwenden
+      getCameraAccess(null, videoRef, setVideoStreamActive);
     }
+
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
@@ -31,14 +38,6 @@ function PhotoMode() {
       }
     };
   }, [cameraActive, device]);
-
-  useEffect(() => {
-    if (Peripherie.hasExternCamera) {
-      connectUSBDevice(setDevice, (device) => getCameraAccess(device, videoRef, setVideoStreamActive));
-    } else {
-      getCameraAccess(null, videoRef, setVideoStreamActive);
-    }
-  }, []);
 
   const handleRetakePicture = () => {
     setImageSrc(null);
@@ -65,7 +64,6 @@ function PhotoMode() {
       uploadImageToCloud(imageSrc); // Bild in die Cloud hochladen
     } else {
       downloadImage(imageSrc); // Bild herunterladen
-      uploadImageToCloud(imageSrc); // Bild in die Cloud hochladen
     }
   };
 

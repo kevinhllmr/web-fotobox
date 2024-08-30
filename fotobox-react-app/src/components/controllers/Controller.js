@@ -2,11 +2,10 @@ import { useRef, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
 
-
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
-    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x054C }] }); //0x054C für Sony a7 III
+    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: Peripherie.vendorID }] }); // Verwende die Vendor ID aus Peripherie
     await newDevice.open();
     if (newDevice.configuration === null)
       await newDevice.selectConfiguration(1);
@@ -47,13 +46,36 @@ export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive)
       videoRef.current.srcObject = stream;
       setVideoStreamActive(true);
     } else {
-      alert('Keine Kamera gefunden.');
+      throw new Error('Keine Kamera gefunden.');
     }
   } catch (error) {
     console.error('Fehler beim Zugriff auf die Kamera:', error);
     if (error.name === "NotAllowedError") {
       alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+    } else {
+      retryUSBDeviceConnection();
     }
+  }
+}
+
+// Funktion zum Neuversuch der USB-Verbindung
+export async function retryUSBDeviceConnection() {
+  try {
+    console.log('Versuche erneut, das USB-Gerät zu verbinden...');
+    await connectUSBDevice((device) => {
+      // Zeige den Einstellungsdialog erneut an
+      alert('Bitte geben Sie erneut die USB-Vendor-ID ein.');
+    }, getCameraAccess);
+  } catch (error) {
+    console.error('Fehler beim erneuten Versuch, das USB-Gerät zu verbinden:', error);
+  }
+}
+
+// Funktion zum Trennen der internen Kamera, wenn eine externe USB-Kamera verbunden ist
+export function disconnectInternalCamera() {
+  if (Peripherie.hasExternCamera) {
+    navigator.mediaDevices.getUserMedia({ video: false }); // Deaktiviere die interne Kamera
+    console.log('Interne Kamera deaktiviert.');
   }
 }
 
@@ -109,13 +131,6 @@ export function downloadImage(imageSrc) {
   }
 }
 
-// Funktion zum Neuaufnehmen eines Fotos
-export function retakePicture(setImageSrc, setPhotoTaken) {
-  setImageSrc(null);
-  setPhotoTaken(false);
-}
-
-
 class AdminSettingsController {
   constructor() {
     this.validUsername = "Novotrend Nöthen";
@@ -154,17 +169,14 @@ export function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/home" />;
 }
 
-
 // Funktion zum Hochladen des Bildes zur Cloud
 export async function uploadImageToCloud(imageSrc) {
   if (Peripherie.cloudAccess && imageSrc) {
     try {
-      // Erstelle den Dateinamen im gewünschten Format: YYYY-MM-DD HH:MM:SS.SSS.png
       const now = new Date();
       const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
       const fileName = `${formattedDate}.png`;
 
-      // Upload des Bildes an die Cloud-Adresse
       const response = await fetch(Peripherie.cloudAdress, {
         method: 'POST',
         headers: {
@@ -172,7 +184,7 @@ export async function uploadImageToCloud(imageSrc) {
         },
         body: JSON.stringify({ 
           image: imageSrc, 
-          name: fileName  // Sende den formatierten Dateinamen
+          name: fileName  
         })
       });
 
@@ -191,5 +203,3 @@ export async function uploadImageToCloud(imageSrc) {
     alert('Cloud-Zugriff ist deaktiviert oder kein Bild vorhanden.');
   }
 }
-
-
