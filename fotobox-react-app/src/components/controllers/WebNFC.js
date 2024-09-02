@@ -3,32 +3,32 @@ export const handleScan = async (setAnswer) => {
     if ('NDEFReader' in window) {
       const ndef = new NDEFReader();
       await ndef.scan();
-      ndef.onreading = (event) => {
+      ndef.addEventListener("reading", event => {
         const decoder = new TextDecoder();
-        let message = '';
         for (const record of event.message.records) {
-          message += decoder.decode(record.data);
+          const data = decoder.decode(record.data);
+          console.log("Data read from NFC:", data);
+          setAnswer(data);
         }
-        console.log(message)
-        setAnswer(message); 
-      };
+      });
+
     } else {
-      alert("Your device does not support NFC functionality");
+      alert("Your device does not support NFC Reader functionality");
     }
   } catch (error) {
-    console.error("Failed to read NFC：", error);
+    console.error("Failed to read NFC:", error);
   }
 };
 
 export const handleWrite = async (message) => {
   try {
-    if ('NDEFWriter' in window) {
-      const ndef = new NDEFWriter(); 
+    if ('NDEFReader' in window) {
+      const ndef = new NDEFReader(); 
       console.log(message)
       await ndef.write(message);
       alert("Successfully wrote data to NFC tag!");
     } else {
-      alert("Your device does not support NFC functionality!");
+      alert("Your device does not support NFC Writer functionality!");
     }
   } catch (error) {
     console.error("Failed to write NFC:", error);
