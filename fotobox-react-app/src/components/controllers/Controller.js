@@ -1,21 +1,27 @@
 import { useRef, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
 
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
-    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x054C }] }); //0x054C für Sony a7 III
+    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: Peripherie.vendorID }] });
     await newDevice.open();
-    if (newDevice.configuration === null)
+    if (newDevice.configuration === null) {
       await newDevice.selectConfiguration(1);
+    }
     await newDevice.claimInterface(0);
     setDevice(newDevice);
     console.log('Device connected:', newDevice);
     getCameraAccess(newDevice);
   } catch (error) {
     console.error('Error connecting USB device:', error);
+    if (error.name === 'SecurityError') {
+      alert('Zugriff auf USB-Gerät verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+    }
   }
 }
+
 
 // Funktion zum Abrufen des Kamera-Zugriffs
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
@@ -45,15 +51,31 @@ export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive)
       videoRef.current.srcObject = stream;
       setVideoStreamActive(true);
     } else {
-      alert('Keine Kamera gefunden.');
+      throw new Error('Keine Kamera gefunden.');
     }
   } catch (error) {
     console.error('Fehler beim Zugriff auf die Kamera:', error);
     if (error.name === "NotAllowedError") {
       alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+    } else {
+      retryUSBDeviceConnection();
     }
   }
 }
+
+// Funktion zum Neuversuch der USB-Verbindung
+export async function retryUSBDeviceConnection() {
+  try {
+    console.log('Versuche erneut, das USB-Gerät zu verbinden...');
+    await connectUSBDevice((device) => {
+      // Zeige den Einstellungsdialog erneut an
+      alert('Bitte geben Sie erneut die USB-Vendor-ID ein.');
+    }, getCameraAccess);
+  } catch (error) {
+    console.error('Fehler beim erneuten Versuch, das USB-Gerät zu verbinden:', error);
+  }
+}
+
 
 // Funktion zum Umschalten der Kamera
 export function handleCameraToggle(setCameraActive) {
@@ -97,25 +119,44 @@ export function downloadImage(imageSrc) {
   if (imageSrc) {
     const link = document.createElement('a');
     link.href = imageSrc;
-    link.download = 'captured_image.png';
+    
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+    const fileName = `${formattedDate}.png`;
+
+    link.download = fileName;
     link.click();
   }
 }
 
-// Funktion zum Neuaufnehmen eines Fotos
-export function retakePicture(setImageSrc, setPhotoTaken) {
-  setImageSrc(null);
-  setPhotoTaken(false);
-}
-
 class AdminSettingsController {
   constructor() {
-      this.validUsername = "Novotrend Nöthen";
-      this.validPassword = "ASDjkl159";
+    this.validUsername = "Novotrend Nöthen";
+    this.validPassword = "ASDjkl159";
   }
 
   validateLogin(username, password) {
-      return username === this.validUsername && password === this.validPassword;
+    return username === this.validUsername && password === this.validPassword;
+  }
+
+  // Funktion zum Umschalten der externen Kamera
+  toggleExternCamera() {
+    Peripherie.hasExternCamera = !Peripherie.hasExternCamera;  // Umschalten des Werts
+  }
+
+  // Funktion zum Umschalten des Cloud Access
+  toggleCloudAccess() {
+    Peripherie.cloudAccess = !Peripherie.cloudAccess;  // Umschalten des Werts
+  }
+
+  // Funktion zum Aktualisieren der Vendor ID
+  updateVendorID(newVendorID) {
+    Peripherie.vendorID = newVendorID;  // Aktualisiere die Vendor ID
+  }
+
+  // Funktion zum Aktualisieren der Cloud-Adresse
+  updateCloudAddress(newAddress) {
+    Peripherie.cloudAdress = newAddress;  // Aktualisiere die Cloud-Adresse
   }
 }
 
@@ -123,5 +164,40 @@ export default AdminSettingsController;
 
 // ProtectedRoute-Komponente
 export function ProtectedRoute({ isAuthenticated, children }) {
-    return isAuthenticated ? children : <Navigate to="/home" />;
+  return isAuthenticated ? children : <Navigate to="/home" />;
+}
+
+// Funktion zum Hochladen des Bildes zur Cloud
+export async function uploadImageToCloud(imageSrc) {
+  if (Peripherie.cloudAccess && imageSrc) {
+    try {
+      const now = new Date();
+      const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+      const fileName = `${formattedDate}.png`;
+
+      const response = await fetch(Peripherie.cloudAdress, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          image: imageSrc, 
+          name: fileName  
+        })
+      });
+
+      if (response.ok) {
+        console.log(`Bild erfolgreich in die Cloud hochgeladen: ${fileName}`);
+        alert(`Bild erfolgreich in die Cloud hochgeladen: ${fileName}`);
+      } else {
+        console.error('Fehler beim Hochladen des Bildes:', response.statusText);
+        alert('Fehler beim Hochladen des Bildes.');
+      }
+    } catch (error) {
+      console.error('Fehler beim Hochladen des Bildes:', error);
+      alert('Fehler beim Hochladen des Bildes.');
+    }
+  } else {
+    alert('Cloud-Zugriff ist deaktiviert oder kein Bild vorhanden.');
+  }
 }

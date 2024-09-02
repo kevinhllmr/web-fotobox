@@ -6,9 +6,9 @@ import PhotoMode from './components/pages/PhotoMode';
 import ConnectPhone from './components/pages/ConnectPhone';
 import RemoteControl from './components/pages/RemoteControl';
 import AdminSettings from './components/pages/AdminSettings';
-import CloudAccess from './components/pages/CloudAccess';
-import AdminPage from './components/pages/Settings';  // Importiere die Seite, die nach dem Login angezeigt werden soll
-import { ProtectedRoute }from './components/controllers/Controller';  // Importiere die geschützte Route
+import CloudAccess from './components/pages/CloudAccess'; 
+import Settings from './components/pages/Settings';  
+import { ProtectedRoute } from './components/controllers/Controller';  // Importiere die geschützte Route
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);  // Zustand für Authentifizierung
@@ -17,15 +17,23 @@ const App = () => {
     <>
       <Router>
         <Routes>
-          <Route path='' exact Component={MainPage} />
-          <Route path='/home/' exact Component={MainPage} />
-          <Route path='/photomode/' exact Component={PhotoMode} />
-          <Route path='/connectphone/' exact Component={ConnectPhone} />
-          <Route path='/remote/' exact Component={RemoteControl} />
-          <Route path='/cloud/' exact Component={CloudAccess} />
-          <Route path='/admin/' exact Component={() => <AdminSettings setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path='/admin/settings' exact Component={() => <ProtectedRoute isAuthenticated={isAuthenticated}><AdminPage /> </ProtectedRoute>
-                 } 
+          <Route path='/' element={<MainPage />} />
+          <Route path='/home/' element={<MainPage />} />
+          <Route path='/photomode/' element={<PhotoMode />} />
+          <Route path='/connectphone/' element={<ConnectPhone />} />
+          <Route path='/remote/' element={<RemoteControl />} />
+          <Route path='/cloud/' element={<CloudAccess />} />
+          <Route 
+            path='/admin/' 
+            element={<AdminSettings setIsAuthenticated={setIsAuthenticated} />} 
+          />
+          <Route 
+            path='/admin/settings' 
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <Settings setIsAuthenticated={setIsAuthenticated} />  {}
+              </ProtectedRoute>
+            } 
           />
         </Routes>
       </Router>
