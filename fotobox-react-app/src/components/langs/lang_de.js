@@ -1,18 +1,29 @@
 
 export function lang_de() {
-    // const welcome = document.getElementById('welcome');
-    // const notice = document.getElementById('notice');
-    // const joinRoomBtn = document.getElementById('joinroombtn');
+    const mainpage_connect_phone = document.getElementById("nfc-text");
+    const mainpage_or = document.getElementById("or");
+    const mainpage_use_tablet = document.getElementById("tablet-text");
+    const mainpage_cloud = document.getElementById("cloud");
+    const mainpage_settings = document.getElementById("settings");
 
-    // if (welcome) {
-    //     welcome.innerHTML = "Erstelle oder trete einem<br> Raum bei, um loszulegen!";
-    // }
 
-    // if (notice) {
-    //     notice.innerHTML = "Das Projekt ist an der HS Anhalt und unter der Aufsicht von Toni Barth entstanden.";
-    // }
+    if(mainpage_connect_phone) {
+        mainpage_connect_phone.innerHTML = "Verbinde<br>dein Handy"
+    }
 
-    // if (joinRoomBtn) {
-    //     joinRoomBtn.innerText = "Raum beitreten";
-    // }
+    if(mainpage_or) {
+        mainpage_or.innerHTML = "oder"
+    }
+
+    if(mainpage_use_tablet) {
+        mainpage_use_tablet.innerHTML = "Tablet benutzen"
+    }
+
+    if(mainpage_cloud) {
+        mainpage_cloud.innerHTML = "Cloud-Zugriff"
+    }
+
+    if(mainpage_settings) {
+        mainpage_settings.innerHTML = "Admin-Einstellungen"
+    }
 }

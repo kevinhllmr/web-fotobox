@@ -24,20 +24,20 @@ function MainPage() {
       if (document.getElementById("imglng") !== null) {
         if (localStorage.getItem("lang") === "de") {
           lang_de();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
   
         } else if (localStorage.getItem("lang") === "en") {
           lang_en();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
   
         } else if (userLang === "de") {
           lang_de();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
           localStorage.setItem("lang", "de");
   
         } else {
           lang_en();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
           localStorage.setItem("lang", "en");
         }
       }
@@ -74,7 +74,7 @@ function MainPage() {
       if (localStorage.getItem("lang") === "de") {
         lang_en();
         localStorage.setItem("lang", "en");
-        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
         document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
         await new Promise((resolve) => setTimeout(resolve, 5000));
         document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
@@ -82,7 +82,7 @@ function MainPage() {
       } else {
         lang_de();
         localStorage.setItem("lang", "de");
-        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
         document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
         await new Promise((resolve) => setTimeout(resolve, 5000));
         document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
