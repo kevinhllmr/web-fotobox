@@ -28,37 +28,47 @@ function AdminSettings({ setIsAuthenticated }) {  // Füge Prop für setIsAuthen
     return (
         <div className='hero-container'>
             <img id="bg" src={process.env.PUBLIC_URL + '/images/home-bg.png'} alt="Background" />
-            <div className="login-container">
-                <h2>Admin Einstellungen</h2>
-                <form onSubmit={(e) => e.preventDefault()}>
-                    <label htmlFor="username">Name</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        value={username} 
-                        onChange={(e) => setUsername(e.target.value)} 
-                        placeholder="Name"
-                        required 
-                    />
+            <div className="header">
+                <img src={process.env.PUBLIC_URL + '/images/hsa-logo.png'} alt="HSA Logo" id="hsa-logo" />
+                <img src={process.env.PUBLIC_URL + '/images/novotrend-logo.png'} alt="Novotrend Logo" id="novotrend-logo" />
+            
+                <span className="flags" id="btn_lng">
+                <img id='imglng' alt="Language Button"></img>
+                </span>
+            </div>
+            <div className="main-content">
+                <div className="login-container">
+                    <h2>Admin Einstellungen</h2>
+                    <form onSubmit={(e) => e.preventDefault()}>
+                        <label htmlFor="username">Name</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            value={username} 
+                            onChange={(e) => setUsername(e.target.value)} 
+                            placeholder="Name"
+                            required 
+                        />
 
-                    <label htmlFor="password">Passwort</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                    />
+                        <label htmlFor="password">Passwort</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required 
+                        />
 
-                    <button type="button" id="login-button" onClick={handleLogin}>
-                        Anmelden
-                    </button>
-                </form>
-                <button id="back-link" onClick={handleBack}>
-                    zurück
-                </button>
+                        <button type="button" id="login-button" onClick={handleLogin}>
+                            Anmelden
+                        </button>
+                    </form>
+                </div>
+                <div className="footer">
+                    <p id="back-button" onClick={handleBack}>zurück</p>
+                </div>
             </div>
         </div>
     );

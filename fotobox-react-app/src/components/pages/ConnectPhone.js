@@ -162,7 +162,7 @@ const ConnectPhone = () => {
                     <button className="copy-icon" onClick={() => copyToClipboard(answer)}>
                         <FaCopy />
                     </button>
-                    <button className="copy-icon" onClick={() => handleScanAnswerFromNFC}>
+                    <button className="copy-icon" onClick={handleScanAnswerFromNFC}>
                         <FaWifi />
                     </button>
                 </div>
