@@ -70,6 +70,29 @@ export async function getAllImagesFromIndexedDB() {
   }
 }
 
+// Funktion zum Löschen aller Daten aus IndexedDB
+export async function deleteDataFromIndexedDB() {
+  try {
+    const db = await openDatabase();
+    const transaction = db.transaction('photos', 'readwrite');
+    const store = transaction.objectStore('photos');
+
+    // Anfrage, um alle Daten zu löschen
+    const request = store.clear();
+
+    request.onsuccess = () => {
+      console.log('Alle Daten wurden erfolgreich aus IndexedDB gelöscht.');
+    };
+
+    request.onerror = (event) => {
+      console.error('Fehler beim Löschen der Daten aus IndexedDB:', event.target.error);
+    };
+  } catch (error) {
+    console.error('Fehler beim Löschen der Daten aus IndexedDB:', error);
+  }
+}
+
+
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {

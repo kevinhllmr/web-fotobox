@@ -62,7 +62,7 @@ function MainPage() {
         });
 
       document.getElementById('cloud').addEventListener('click', function (event) {
-        navigate(`/cloud/`);
+        navigate(`/gallery/`);
       })
 
       document.getElementById('settings').addEventListener('click', function (event) {

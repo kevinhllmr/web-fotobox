@@ -3,7 +3,7 @@ import '../../App.css';
 import './Settings.css'; 
 import { useNavigate } from 'react-router-dom';
 import Peripherie from "../controllers/Peripherie";  // Import der Peripherie-Daten
-import AdminSettingsController from '../controllers/Controller'; // Import der Controller-Klasse
+import AdminSettingsController, {deleteDataFromIndexedDB} from '../controllers/Controller'; // Import der Controller-Klasse
 
 function Settings({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ function Settings({ setIsAuthenticated }) {
   const [isCameraOn, setIsCameraOn] = useState(Peripherie.hasExternCamera);
   const [isCloudAccessOn, setIsCloudAccessOn] = useState(Peripherie.cloudAccess); // Zustand für Cloud Access
   const [vendorID, setVendorID] = useState(`0x${Peripherie.vendorID.toString(16).toUpperCase()}`);  // In String umwandeln
-  const [cloudAdress, setCloudAdress] = useState(Peripherie.cloudAdress);
+  const [cloudAdress] = useState(Peripherie.cloudAdress);
 
   const handleToggleCamera = () => {
     setIsCameraOn(!isCameraOn);  // Toggle-Zustand wechseln
@@ -64,6 +64,12 @@ function Settings({ setIsAuthenticated }) {
     navigate('/home/');
   };
 
+  const handleDeleteFotos = () => {
+    deleteDataFromIndexedDB();
+  };
+
+  
+
   return (
     <div className="settings-container">
       <img id="bg" src={process.env.PUBLIC_URL + '/images/home-bg.png'} alt="Background" />
@@ -106,6 +112,10 @@ function Settings({ setIsAuthenticated }) {
           </label>
         </div>
 
+        {/* Button zum Löschen aller IndexDB-Daten */}
+        <div className="settings-item">
+          <button onClick={handleDeleteFotos}>Lösche alle Fotos</button>
+        </div>
 
         {/* Button zum Anzeigen aller Peripherie-Daten */}
         <div className="settings-item">

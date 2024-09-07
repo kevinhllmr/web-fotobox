@@ -42,6 +42,7 @@
     height: auto; /* Höhe automatisch anpassen */
     border-radius: 5px;
     margin-bottom: 5px;
+    cursor: pointer;
   }
   
   .pagination-controls {
@@ -170,4 +171,26 @@
     border: 2px solid black;
     border-radius: 4vh;
     cursor: pointer;
+    
 }
+
+
+#return-button {
+  position: fixed; 
+  left: 20px; 
+  bottom: 20px; 
+  color: white; 
+  padding: 5px 15px;
+  z-index: 100; 
+  text-align: left;
+  float: left;
+  padding: 3%;
+  font-size: 200%;
+  text-decoration: underline;
+}
+
+#return-button:hover {
+  cursor: pointer;
+  color: rgb(185, 185, 185);
+}
+

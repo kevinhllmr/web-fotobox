@@ -42,7 +42,7 @@ function PhotoMode() {
     setCameraActive(false);
     setButtonsShown(true);
     setTimeout(() => {
-      setCameraActive(true);
+    setCameraActive(true);
     }, 1);
   };
 
@@ -58,6 +58,7 @@ function PhotoMode() {
 
   const handleSavePicture = () => {
     saveImageToIndexedDB(imageSrc);  // Bild in IndexedDB speichern
+    handleRetakePicture();
   };
 
   return (

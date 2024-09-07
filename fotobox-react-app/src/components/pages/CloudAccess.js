@@ -60,7 +60,7 @@ function CloudAccess() {
   // Funktion zum Senden des Fotos an ein Smartphone
   const sendFotoToSmartphone = (imageSrc) => {
     console.log('Sending photo to smartphone:', imageSrc);
-    // Hier kannst du die Logik implementieren, um das Foto an ein Smartphone zu senden
+    //TODO Hier kannst du die Logik implementieren, um das Foto an ein Smartphone zu senden
   };
 
   return (
@@ -90,7 +90,7 @@ function CloudAccess() {
         </button>
 
         <div>
-          <p id="return-button" onClick={handleBackClick}>zurück</p>
+          <a id="return-button" onClick={handleBackClick}>zurück</a>
         </div>
       </div>
 
