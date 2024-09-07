@@ -71,9 +71,6 @@ function Settings({ setIsAuthenticated }) {
           <img src={process.env.PUBLIC_URL + '/images/hsa-logo.png'} alt="HSA Logo" id="hsa-logo" />
           <img src={process.env.PUBLIC_URL + '/images/novotrend-logo.png'} alt="Novotrend Logo" id="novotrend-logo" />
       
-          <span className="flags" id="btn_lng">
-            <img id='imglng' alt="Language Button"></img>
-          </span>
       </div>
       <div className="itemContainer">
         <h2>Admin Einstellungen</h2>
@@ -109,19 +106,6 @@ function Settings({ setIsAuthenticated }) {
           </label>
         </div>
 
-        {/* Anzeige der Cloud Adresse nur wenn Cloud Access aktiv ist */}
-        {isCloudAccessOn && (
-          <div className="settings-item">
-            <label>Cloud Adresse:</label>
-            <input 
-              type="text" 
-              placeholder="https://cloud.hs-anhalt.de/" 
-              value={cloudAdress}
-              onChange={(e) => setCloudAdress(e.target.value)}  // Setze den Cloud-Adresse Zustand
-            />
-            <button onClick={handleCloudAdressChange}>Eingabe</button>
-          </div>
-        )}
 
         {/* Button zum Anzeigen aller Peripherie-Daten */}
         <div className="settings-item">

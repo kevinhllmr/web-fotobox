@@ -32,9 +32,7 @@ function AdminSettings({ setIsAuthenticated }) {  // Füge Prop für setIsAuthen
                 <img src={process.env.PUBLIC_URL + '/images/hsa-logo.png'} alt="HSA Logo" id="hsa-logo" />
                 <img src={process.env.PUBLIC_URL + '/images/novotrend-logo.png'} alt="Novotrend Logo" id="novotrend-logo" />
             
-                <span className="flags" id="btn_lng">
-                <img id='imglng' alt="Language Button"></img>
-                </span>
+            
             </div>
             <div className="main-content">
                 <div className="login-container">

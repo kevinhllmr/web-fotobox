@@ -1,6 +1,74 @@
-import { useRef, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
+
+// IndexedDB öffnen oder erstellen
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('PhotoGalleryDB', 1);
+    
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('photos')) {
+        db.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+
+    request.onsuccess = function (event) {
+      resolve(event.target.result);
+    };
+
+    request.onerror = function (event) {
+      reject('Fehler beim Öffnen der Datenbank: ' + event.target.errorCode);
+    };
+  });
+}
+
+// Bild in IndexedDB speichern
+export async function saveImageToIndexedDB(imageSrc) {
+  try {
+    const db = await openDatabase();
+    const transaction = db.transaction('photos', 'readwrite');
+    const store = transaction.objectStore('photos');
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+    const fileName = `${formattedDate}.png`;
+
+    store.add({ name: fileName, data: imageSrc });
+
+    transaction.oncomplete = () => {
+      console.log('Bild erfolgreich in IndexedDB gespeichert: ' + fileName);
+    };
+
+    transaction.onerror = (event) => {
+      console.error('Fehler beim Speichern des Bildes in IndexedDB:', event.target.error);
+    };
+  } catch (error) {
+    console.error('Fehler beim Speichern in IndexedDB:', error);
+  }
+}
+
+// Alle Bilder aus IndexedDB abrufen
+export async function getAllImagesFromIndexedDB() {
+  try {
+    const db = await openDatabase();
+    const transaction = db.transaction('photos', 'readonly');
+    const store = transaction.objectStore('photos');
+
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+
+      request.onsuccess = (event) => {
+        resolve(event.target.result);
+      };
+
+      request.onerror = (event) => {
+        reject('Fehler beim Abrufen der Bilder aus IndexedDB: ' + event.target.errorCode);
+      };
+    });
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Bilder aus IndexedDB:', error);
+    return [];
+  }
+}
 
 // Funktion zum Verbinden des USB-Geräts
 export async function connectUSBDevice(setDevice, getCameraAccess) {
@@ -154,10 +222,6 @@ class AdminSettingsController {
     Peripherie.vendorID = newVendorID;  // Aktualisiere die Vendor ID
   }
 
-  // Funktion zum Aktualisieren der Cloud-Adresse
-  updateCloudAddress(newAddress) {
-    Peripherie.cloudAdress = newAddress;  // Aktualisiere die Cloud-Adresse
-  }
 }
 
 export default AdminSettingsController;
@@ -167,37 +231,3 @@ export function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/home" />;
 }
 
-// Funktion zum Hochladen des Bildes zur Cloud
-export async function uploadImageToCloud(imageSrc) {
-  if (Peripherie.cloudAccess && imageSrc) {
-    try {
-      const now = new Date();
-      const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
-      const fileName = `${formattedDate}.png`;
-
-      const response = await fetch(Peripherie.cloudAdress, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          image: imageSrc, 
-          name: fileName  
-        })
-      });
-
-      if (response.ok) {
-        console.log(`Bild erfolgreich in die Cloud hochgeladen: ${fileName}`);
-        alert(`Bild erfolgreich in die Cloud hochgeladen: ${fileName}`);
-      } else {
-        console.error('Fehler beim Hochladen des Bildes:', response.statusText);
-        alert('Fehler beim Hochladen des Bildes.');
-      }
-    } catch (error) {
-      console.error('Fehler beim Hochladen des Bildes:', error);
-      alert('Fehler beim Hochladen des Bildes.');
-    }
-  } else {
-    alert('Cloud-Zugriff ist deaktiviert oder kein Bild vorhanden.');
-  }
-}

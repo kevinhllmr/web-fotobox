@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import '../../App.css';
 import './PhotoMode.css';
-import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, uploadImageToCloud, retryUSBDeviceConnection} from '../controllers/Controller.js';
+import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, saveImageToIndexedDB, retryUSBDeviceConnection } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,13 +20,11 @@ function PhotoMode() {
 
   useEffect(() => {
     if (Peripherie.hasExternCamera) {
-      // USB-Gerät verwenden
       connectUSBDevice(setDevice, (device) => {
         getCameraAccess(device, videoRef, setVideoStreamActive)
-          .catch(() => retryUSBDeviceConnection());  // Fehler abfangen und erneut versuchen
+          .catch(() => retryUSBDeviceConnection());
       });
     } else {
-      // Interne Kamera verwenden
       getCameraAccess(null, videoRef, setVideoStreamActive);
     }
 
@@ -59,11 +57,7 @@ function PhotoMode() {
   };
 
   const handleSavePicture = () => {
-    if (Peripherie.cloudAccess) {
-      uploadImageToCloud(imageSrc); // Bild in die Cloud hochladen
-    } else {
-      downloadImage(imageSrc); // Bild herunterladen
-    }
+    saveImageToIndexedDB(imageSrc);  // Bild in IndexedDB speichern
   };
 
   return (
