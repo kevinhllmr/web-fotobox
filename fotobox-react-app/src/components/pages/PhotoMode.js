@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import '../../App.css';
 import './PhotoMode.css';
-import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, saveImageToIndexedDB, retryUSBDeviceConnection } from '../controllers/Controller.js';
+import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, saveImageToIndexedDB } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,22 +19,42 @@ function PhotoMode() {
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    if (Peripherie.hasExternCamera) {
-      connectUSBDevice(setDevice, (device) => {
-        getCameraAccess(device, videoRef, setVideoStreamActive)
-          .catch(() => retryUSBDeviceConnection());
-      });
-    } else {
-      getCameraAccess(null, videoRef, setVideoStreamActive);
-    }
-
+    const initializeCamera = async () => {
+      try {
+        if (Peripherie.hasExternCamera && !device) {
+          await connectUSBDevice(setDevice, async (device) => {
+            try {
+              await getCameraAccess(device, videoRef, setVideoStreamActive);
+            } catch (error) {
+              console.error('Fehler beim Abrufen des Kamera-Zugriffs (extern):', error);
+            }
+          });
+        } else if (!Peripherie.hasExternCamera && !videoStreamActive) {
+          // Verwende die interne Kamera nur, wenn `hasExternCamera` auf `false` gesetzt ist
+          try {
+            await getCameraAccess(null, videoRef, setVideoStreamActive);
+          } catch (error) {
+            console.error('Fehler beim Abrufen des Kamera-Zugriffs (intern):', error);
+          }
+        }
+      } catch (error) {
+        console.error('Fehler beim Verbinden des USB-Geräts:', error);
+      }
+    };
+  
+    initializeCamera();
+  
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         videoRef.current.srcObject = null;
       }
     };
-  }, [cameraActive, device]);
+  }, [cameraActive, device, videoStreamActive]);
+  
+  
+  
+  
 
   const handleRetakePicture = () => {
     setImageSrc(null);
