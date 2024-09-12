@@ -29,16 +29,6 @@ const ConnectPhone = () => {
 
     useEffect(() => {
         if (!isMobile) {
-            if ('NDEFReader' in window) {
-                try {
-                  const nfc = new NDEFReader();
-                  console.log('NFC is available');
-                } catch (error) {
-                  console.warn('NFC Initialization fail:', error);
-                }
-              } else {
-                alert('NFC is unavailable');
-            }
             const newPeer = createPeer(
                 true,
                 (data) => {
@@ -57,16 +47,7 @@ const ConnectPhone = () => {
             );
             setPeer(newPeer);
         } else {
-            if ('NDEFReader' in window) {
-                try {
-                  const nfc = new NDEFReader();
-                  console.log('NFC is available');
-                } catch (error) {
-                  console.warn('NFC Initialization fail:', error);
-                }
-              } else {
-                alert('NFC is unavailable');
-            }
+            console.log('Mobile device detected.')
         }
     }, [isMobile]);
 
@@ -120,7 +101,11 @@ const ConnectPhone = () => {
     };
 
     const handleWriteOfferToNFC = () => {
-        if (offer.trim() !== '') {
+        if (!('NDEFReader' in window)) {
+            alert('Your device does not support NFC functionality.');
+            return;
+        }
+        if (offer.trim() !== '' ) {
             handleWrite(offer)
                 .then(() => alert('Successfully wrote offer to NFC tag!'))
                 .catch(error => console.error('Failed to write offer to NFC:', error));
@@ -130,7 +115,17 @@ const ConnectPhone = () => {
     };
 
     const handleScanAnswerFromNFC = async () => {
+        if (!('NDEFReader' in window)) {
+            alert('Your device does not support NFC functionality.');
+            return;
+        }
         await handleScan(setAnswer); 
+        if (offer){
+            setAnswer(offer);
+            alert("Mobile has successfully read offer and copied it into Answer JSON!");
+        }else{
+            alert('Failed to read offer from NFC. Please try again.');
+        }
     };
     return (
         <div className={isMobile ? "mobile" : "desktop"}>

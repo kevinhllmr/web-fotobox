@@ -15,7 +15,7 @@ export const handleScan = async (setAnswer) => {
           console.log("Record Type:", record.recordType);
           console.log("MIME Type:", record.mediaType);
           console.log("Record ID:", record.id);
-
+ 
           let recordData = decoder.decode(record.data);
           console.log("Record Data:", recordData);
 
@@ -39,7 +39,7 @@ export const handleScan = async (setAnswer) => {
       });
 
     } else {
-      alert("NFC is not supported on this device.");
+      alert("NFC is not supported on this device. Maybe your browser doesn't support Webnfc");
       console.error("NFC is not supported on this device.");
     }
   } catch (error) {
@@ -60,9 +60,38 @@ export const handleWrite = async (message) => {
       let isDataComplete = messageWithChecksum && typeof messageWithChecksum === 'string' && messageWithChecksum.trim().length > 0;
 
       if (isDataComplete) {
+
         await ndef.write(messageWithChecksum);
         console.log("Data written to NFC with checksum:", messageWithChecksum);
-        alert("Successfully wrote data with checksum to NFC tag!");
+
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+        await ndef.scan();
+
+        ndef.addEventListener("reading", event => {
+          const decoder = new TextDecoder();
+          let data = "";
+
+          
+          for (const record of event.message.records) {
+            let recordData = decoder.decode(record.data);
+            data += recordData;
+          }
+
+          const [messageData, checksumData] = data.split("|checksum:");
+
+          if (messageData && checksumData && checksumData == messageData.length) {
+            if (messageWithChecksum === data) {
+              console.log("Data has been correctly written and verified:", messageData);
+              alert("Data correctly written and verified on NFC tag!");
+            } else {
+              console.error("Data mismatch! Written data and read data do not match.");
+              alert("Data mismatch! Please try writing again.");
+            }
+          } else {
+            console.error("Checksum validation failed. Data may be corrupted.");
+            alert("Data validation failed. Please try writing again.");
+          }
+        });
       } else {
         console.error("Invalid or incomplete data. Writing aborted.");
         alert("Cannot write: Invalid or incomplete data.");
@@ -72,5 +101,6 @@ export const handleWrite = async (message) => {
     }
   } catch (error) {
     console.error("Failed to write NFC:", error);
+    alert("Failed to write data to NFC tag. Please try again.");
   }
 };
