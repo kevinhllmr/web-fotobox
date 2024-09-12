@@ -1,5 +1,5 @@
 let Peripherie = {
-    hasExternCamera: false,
+    hasExternCamera: true,
     hasSmartphone: false,
     cloudAccess:false,
     vendorID: 0x054C,
