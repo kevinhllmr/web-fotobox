@@ -197,11 +197,6 @@ export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive)
 }
 
 
-
-
-
-
-
 /*
 export async function retryUSBDeviceConnection() {
   try {

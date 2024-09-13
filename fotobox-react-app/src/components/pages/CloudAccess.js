@@ -102,7 +102,7 @@ function CloudAccess() {
           <div className="caption">{selectedImage.name}</div>
           {/* Knöpfe zum Herunterladen und Senden des Bildes an ein Smartphone */}
           <div className="modal-buttons">
-            <button id= "downloadButton" onClick={() => downloadImage(selectedImage.data)}>Bild herunterladen</button>
+            {/*<button id= "downloadButton" onClick={() => downloadImage(selectedImage.data)}>Bild herunterladen</button> */}
             <button id = "sendFotoButton" onClick={() => sendFotoToSmartphone(selectedImage.data)}>Bild an Smartphone senden</button>
           </div>
         </div>
