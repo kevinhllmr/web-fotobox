@@ -27,6 +27,69 @@ const ConnectPhone = () => {
         return () => window.removeEventListener('resize', handleWindowSizeChange);
     }, [width]);
 
+    // Tablet: 将 offer JSON 写入 NFC 标签
+    const handleWriteOfferToNFC = () => {
+        if (offer.trim() !== '') {
+            if ('NDEFReader' in window){
+                handleWrite(offer)
+                    .then(() => alert('Successfully wrote Offer JSON to the NFC tag!'))
+                    .catch(error => console.error('Fail :', error));
+            }
+            else{
+                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
+                return;
+            }
+            
+        } else {
+            alert('Offer JSON is empty，please input valid content before writing.');
+        }
+    };
+
+
+    // Mobile: 扫描 NFC 并将内容复制到 offer JSON 文本框
+    const handleScanOfferFromNFC = async () => {
+        await handleScan(setOffer);
+    };
+
+    // Tablet: 扫描 NFC 并将内容复制到 answer JSON 文本框
+    const handleScanAnswerFromNFC = async () => {
+        if (!isMobile) {
+            try {
+                await handleScan(setAnswer);
+                alert('Successfully read Answer from NFC tag!');
+                if (answer) {
+                    handleSetRemoteDescription();
+                }
+            } catch (error) {
+                console.error('Failed to read Answer from NFC:', error);
+            }
+        }
+    };
+
+    // Mobile: 将 answer JSON 写入 NFC 标签
+    const handleWriteAnswerToNFC = () => {
+        if (answer.trim() !== '' ) {
+            if('NDEFReader' in window){
+                handleGenerateAnswer(offer, (generatedAnswer) => {
+                    setAnswer(generatedAnswer);
+                    handleWrite(answer)
+                    .then(() => alert('Successfully wrote JSON to the NFC tag！'))
+                    .catch(error => console.error('写入 NFC 失败:', error));
+                }
+            );
+
+            }
+            else{
+                alert("Your device does not support NFC Writer functionality! Or your browser does not support the webnfc function ");
+                return;
+            }
+
+        } else {
+            alert('Answer JSON is empty，please input valid content before writing.');
+        }
+    };
+
+
     useEffect(() => {
         if (!isMobile) {
             const newPeer = createPeer(
@@ -100,33 +163,7 @@ const ConnectPhone = () => {
         }
     };
 
-    const handleWriteOfferToNFC = () => {
-        if (!('NDEFReader' in window)) {
-            alert('Your device does not support NFC functionality.');
-            return;
-        }
-        if (offer.trim() !== '' ) {
-            handleWrite(offer)
-                .then(() => alert('Successfully wrote offer to NFC tag!'))
-                .catch(error => console.error('Failed to write offer to NFC:', error));
-        } else {
-            alert('Offer is empty. Please enter a valid offer to write.');
-        }
-    };
 
-    const handleScanAnswerFromNFC = async () => {
-        if (!('NDEFReader' in window)) {
-            alert('Your device does not support NFC functionality.');
-            return;
-        }
-        await handleScan(setAnswer); 
-        if (offer){
-            setAnswer(offer);
-            alert("Mobile has successfully read offer and copied it into Answer JSON!");
-        }else{
-            alert('Failed to read offer from NFC. Please try again.');
-        }
-    };
     return (
         <div className={isMobile ? "mobile" : "desktop"}>
             <h1>{isMobile ? "Mobile App" : "Desktop App"}</h1>
@@ -141,9 +178,13 @@ const ConnectPhone = () => {
                     <button className="copy-icon" onClick={() => copyToClipboard(offer)}>
                         <FaCopy />
                     </button>
-                    <button className="copy-icon" onClick={handleWriteOfferToNFC}>
-                        <FaWifi />
-                    </button>
+                    <button
+                    className="nfc-button"
+                    onClick={isMobile ? handleScanOfferFromNFC : handleWriteOfferToNFC}
+                >
+                    {isMobile ? 'Scanning NFCTag to Offer Json' : 'Write Offer to NFC Tag'}
+                    <FaWifi />
+                </button>
                 </div>
                 <div className="answer">
                     <label>Answer JSON:</label>
@@ -157,9 +198,13 @@ const ConnectPhone = () => {
                     <button className="copy-icon" onClick={() => copyToClipboard(answer)}>
                         <FaCopy />
                     </button>
-                    <button className="copy-icon" onClick={handleScanAnswerFromNFC}>
-                        <FaWifi />
-                    </button>
+                    <button
+                    className="nfc-button"
+                    onClick={isMobile ? handleWriteAnswerToNFC : handleScanAnswerFromNFC}
+                >
+                    {isMobile ? 'Write Answer to NFC Tag' : 'Scanning NFCTag to Answer Json'}
+                    <FaWifi />
+                </button>
                 </div>
                 {!isMobile && (
                     <button onClick={handleSetRemoteDescription} disabled={remoteDescriptionSet}>
