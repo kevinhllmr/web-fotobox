@@ -48,21 +48,34 @@ const ConnectPhone = () => {
 
     // Mobile: 扫描 NFC 并将内容复制到 offer JSON 文本框
     const handleScanOfferFromNFC = async () => {
-        await handleScan(setOffer);
+        if ('NDEFReader' in window){
+            await handleScan(setOffer);
+        }
+        else{
+            alert("NFC read failed. Please try again or use a device with NFC support.");
+            return;
+        }
+        
     };
 
     // Tablet: 扫描 NFC 并将内容复制到 answer JSON 文本框
     const handleScanAnswerFromNFC = async () => {
         if (!isMobile) {
-            try {
-                await handleScan(setAnswer);
-                alert('Successfully read Answer from NFC tag!');
-                if (answer) {
-                    handleSetRemoteDescription();
-                }
-            } catch (error) {
-                console.error('Failed to read Answer from NFC:', error);
+            if ('NDEFReader' in window)
+            {
+                    try {
+                    await handleScan(setAnswer);
+                    alert('Successfully read Answer from NFC tag!');
+                    if (answer) {
+                        handleSetRemoteDescription();
+                    }
+                } catch (error) {
+                    console.error('Failed to read Answer from NFC:', error);
+                }   
+            }else{
+                alert("NFC read failed. Please try again or use a device with NFC support.");
             }
+
         }
     };
 
