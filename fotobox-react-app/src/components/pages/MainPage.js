@@ -53,11 +53,13 @@ function MainPage() {
       document.getElementsByClassName('tablet')[0]
         .addEventListener('click', function (event) {
           // navigate(`/` + user_id + `/photomode/`);
+          localStorage.setItem("deviceUsed", "tablet");
           navigate(`/photomode/`);
         });
 
       document.getElementsByClassName('phone')[0]
         .addEventListener('click', function (event) {
+          localStorage.setItem("deviceUsed", "phone");
           navigate(`/connectphone/`);
         });
 

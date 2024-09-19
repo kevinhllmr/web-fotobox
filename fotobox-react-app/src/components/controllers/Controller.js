@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import WebRTC from './WebRTC'; 
 import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
 
 // Funktion zum Verbinden des USB-Geräts
@@ -26,11 +27,14 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
 // Funktion zum Abrufen des Kamera-Zugriffs
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
   try {
-    await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+    // Request camera access
+    await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
     console.log('Versuche, Kamerazugriff zu erhalten...');
+    
+    // Enumerate video devices
     const devices = await navigator.mediaDevices.enumerateDevices();
     console.log('Gefundene Geräte:', devices);
-
+    
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
     console.log('Videogeräte:', videoDevices);
 
@@ -48,8 +52,13 @@ export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive)
     if (selectedDeviceId) {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
       console.log('Erhaltener Stream:', stream);
-      videoRef.current.srcObject = stream;
-      setVideoStreamActive(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setVideoStreamActive(true);
+      } else {
+        console.error('videoRef.current is null');
+      }
     } else {
       throw new Error('Keine Kamera gefunden.');
     }
@@ -128,6 +137,42 @@ export function downloadImage(imageSrc) {
     link.click();
   }
 }
+
+export function handleSavePhotoRequest(videoRef, canvasRef) {
+  if (WebRTC.dataChannel) {
+      if (videoRef.current) {
+          // Capture the image
+          const videoWidth = videoRef.current.videoWidth;
+          const videoHeight = videoRef.current.videoHeight;
+          const canvas = canvasRef.current;
+          canvas.width = videoWidth;
+          canvas.height = videoHeight;
+          const context = canvas.getContext('2d');
+          context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+          const imageData = canvas.toDataURL('image/png'); // Capture the image in base64
+
+          // Ensure we have image data before sending
+          if (imageData) {
+              console.log('Sending photo data:', imageData);
+              WebRTC.sendPhoto(imageData); // Send the captured photo over WebRTC
+          } else {
+              console.log('No image data captured');
+          }
+      } else {
+          console.log('Video element is not ready');
+      }
+  } else {
+      console.log('Data channel is not ready');
+  }
+}
+
+// WebRTC onData handler to listen for commands from the phone
+WebRTC.onData((message) => {
+  const parsedMessage = JSON.parse(message);
+  if (parsedMessage.type === 'savePhoto') {
+      handleSavePhotoRequest(videoRef, canvasRef); // Trigger the photo capture and send process
+  }
+});
 
 class AdminSettingsController {
   constructor() {
