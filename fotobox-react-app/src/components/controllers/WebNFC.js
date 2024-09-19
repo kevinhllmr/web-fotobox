@@ -1,10 +1,17 @@
+let hasScanned = false; // Flag to track if the tag has been scanned
+
 export const handleScan = async (setAnswer) => {
   try {
     if ('NDEFReader' in window) {
+
       const ndef = new NDEFReader();
       await ndef.scan();
 
       ndef.addEventListener("reading", event => {
+        if (hasScanned) {
+          console.log("Tag has already been scanned. Ignoring subsequent scan.");
+          return; // Ignore if tag has already been scanned
+        }
         const decoder = new TextDecoder();
         let data = "";
         let serialNumber = event.serialNumber || "Unknown Serial Number";
@@ -15,7 +22,10 @@ export const handleScan = async (setAnswer) => {
           console.log("Record Type:", record.recordType);
           console.log("MIME Type:", record.mediaType);
           console.log("Record ID:", record.id);
- 
+          alert( record.recordType);
+          alert(record.mediaType);
+          alert(record.id);
+          alert(record.serialNumber);
           let recordData = decoder.decode(record.data);
           console.log("Record Data:", recordData);
 
@@ -27,7 +37,8 @@ export const handleScan = async (setAnswer) => {
 
           if (messageData && checksumData && checksumData == messageData.length) {
             console.log("Data read from NFC is complete and valid:", messageData);
-            setAnswer(messageData);  
+            setAnswer(messageData); 
+            hasScanned = true;
           } else {
             console.error("Checksum validation failed. Data may be corrupted.");
             alert("Data validation failed. Please try scanning the NFC tag again.");
