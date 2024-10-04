@@ -51,10 +51,6 @@ function PhotoMode() {
       }
     };
   }, [cameraActive, device, videoStreamActive]);
-  
-  
-  
-  
 
   const handleRetakePicture = () => {
     setImageSrc(null);
@@ -62,7 +58,7 @@ function PhotoMode() {
     setCameraActive(false);
     setButtonsShown(true);
     setTimeout(() => {
-    setCameraActive(true);
+      setCameraActive(true);
     }, 1);
   };
 

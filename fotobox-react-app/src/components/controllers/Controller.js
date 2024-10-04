@@ -92,7 +92,7 @@ export async function deleteDataFromIndexedDB() {
   }
 }
 
-
+// Funktion zur Verbindung mit dem USB-Gerät
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
     console.log('Starte USB-Geräteverbindung...');
@@ -123,92 +123,51 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
   }
 }
 
-
-
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
   try {
-    console.log('Versuche, Kamerazugriff zu erhalten...');
+    console.log('Versuche, auf die USB-Kamera zuzugreifen...');
+    
+    // Ausgabe des `newDevice` Objekts zur Überprüfung
+    console.log('Neues USB-Gerät:', newDevice);
 
-    if (newDevice && Peripherie.hasExternCamera) {
-      console.log('Externe Kamera wird versucht zu verbinden:', newDevice.productName);
+    // Hole alle verfügbaren Video-Geräte
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    console.log('Alle verfügbaren Geräte:', devices);
 
-      // Nutze WebUSB spezifische Funktionen, um Zugriff auf die externe Kamera zu erhalten
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      console.log('Verfügbare Geräte:', devices);
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      console.log('Gefilterte Videogeräte:', videoDevices);
+    // Filtere nach Videogeräten
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    console.log('Gefundene Video-Eingabegeräte:', videoDevices);
 
-      // Debugging: Alle verfügbaren Geräte-Labels, IDs und Gruppen auflisten
-      videoDevices.forEach((device, index) => {
-        console.log(`Videogerät ${index}: Label - ${device.label}, DeviceID - ${device.deviceId}, GroupID - ${device.groupId}`);
+    // Finde die externe Kamera anhand des Gerätenamens oder nutze die erste verfügbare Kamera
+    const externalCamera = videoDevices.find(device => device.label.includes(newDevice.productName)) || videoDevices[0];
+
+    if (externalCamera) {
+      console.log('Externe Kamera gefunden:', externalCamera.label);
+      console.log('Verwende Gerät mit ID:', externalCamera.deviceId);
+
+      // Verwende die Kamera-ID im `getUserMedia`-Aufruf
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: externalCamera.deviceId,
+        }
       });
 
-      // Versuche, das Gerät anhand der vendorID zu finden
-      let selectedDeviceId = videoDevices.find(device => device.deviceId.includes(Peripherie.vendorID.toString(16)))?.deviceId;
+      console.log('Erhaltener Videostream:', stream);
 
-      if (!selectedDeviceId) {
-        console.warn('Exakte externe Kamera konnte nicht anhand der VendorID gefunden werden. Versuche, anhand der groupId zu suchen.');
-
-        // Fallback auf Suche nach einer `groupId`, die sich von den typischen internen Kameras unterscheidet
-        const uniqueGroupIds = [...new Set(videoDevices.map(device => device.groupId))];
-        console.log('Eindeutige Gruppen-IDs gefunden:', uniqueGroupIds);
-
-        if (uniqueGroupIds.length === 1) {
-          // Wenn nur eine Gruppe vorhanden ist, ist das die externe Kamera
-          selectedDeviceId = videoDevices.find(device => device.groupId === uniqueGroupIds[0])?.deviceId;
-        } else {
-          // Wenn mehrere Gruppen vorhanden sind, könnte eine davon die externe Kamera sein (Fallback auf die erste)
-          selectedDeviceId = videoDevices.find(device => device.groupId !== "" && device.groupId !== "default")?.deviceId;
-          console.warn('Fällt auf das erste verfügbare Gerät zurück, wenn keine eindeutige Zuordnung möglich ist:', selectedDeviceId);
-        }
-      }
-
-      if (!selectedDeviceId) {
-        console.error('Externe Kamera konnte nicht gefunden werden, obwohl sie angeschlossen ist.');
-        console.log('Produktname der externen Kamera (newDevice.productName):', newDevice.productName);
-        console.log('Video-Gerätelabels und Gruppen-IDs, die durchsucht wurden:', videoDevices.map(device => ({ label: device.label, groupId: device.groupId })));
-        return;
-      }
-
-      console.log('Ausgewählte Gerät-ID für externe Kamera:', selectedDeviceId);
-
-      // Zugriff auf die Kamera
-      const constraints = { video: { deviceId: { exact: selectedDeviceId } } };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Erhaltener Stream von externer Kamera:', stream);
+      // Weise den Videostream der Video-Referenz zu
       videoRef.current.srcObject = stream;
-      setVideoStreamActive(true);
-
-    } else if (!newDevice) {
-      console.log('Keine externe Kamera vorhanden, Fallback auf interne Kamera...');
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      console.log('Erhaltener Stream von interner Kamera:', stream);
-      videoRef.current.srcObject = stream;
+      console.log('Videostream im Video-Element zugewiesen.');
       setVideoStreamActive(true);
     } else {
-      console.error('Keine Kamera gefunden.');
+      console.error('Keine passende externe Kamera gefunden.');
     }
   } catch (error) {
     console.error('Fehler beim Zugriff auf die Kamera:', error);
-    if (error.name === "NotAllowedError") {
+    if (error.name === 'NotAllowedError') {
       alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
     }
   }
 }
-
-
-/*
-export async function retryUSBDeviceConnection() {
-  try {
-    console.log('Versuche erneut, das USB-Gerät zu verbinden...');
-    await connectUSBDevice((device) => {
-      // Zeige den Einstellungsdialog erneut an
-      alert('Bitte geben Sie erneut die USB-Vendor-ID ein.');
-    }, getCameraAccess);
-  } catch (error) {
-    console.error('Fehler beim erneuten Versuch, das USB-Gerät zu verbinden:', error);
-  }
-}*/
 
 
 // Funktion zum Umschalten der Kamera
@@ -273,21 +232,17 @@ class AdminSettingsController {
     return username === this.validUsername && password === this.validPassword;
   }
 
-  // Funktion zum Umschalten der externen Kamera
   toggleExternCamera() {
-    Peripherie.hasExternCamera = !Peripherie.hasExternCamera;  // Umschalten des Werts
+    Peripherie.hasExternCamera = !Peripherie.hasExternCamera;
   }
 
-  // Funktion zum Umschalten des Cloud Access
   toggleCloudAccess() {
-    Peripherie.cloudAccess = !Peripherie.cloudAccess;  // Umschalten des Werts
+    Peripherie.cloudAccess = !Peripherie.cloudAccess;
   }
 
-  // Funktion zum Aktualisieren der Vendor ID
   updateVendorID(newVendorID) {
-    Peripherie.vendorID = newVendorID;  // Aktualisiere die Vendor ID
+    Peripherie.vendorID = newVendorID;
   }
-
 }
 
 export default AdminSettingsController;
@@ -296,4 +251,3 @@ export default AdminSettingsController;
 export function ProtectedRoute({ isAuthenticated, children }) {
   return isAuthenticated ? children : <Navigate to="/home" />;
 }
-
