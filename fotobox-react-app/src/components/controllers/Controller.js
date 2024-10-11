@@ -97,7 +97,7 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
     console.log('Starte USB-Geräteverbindung...');
 
-    const newDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: Peripherie.vendorID }] });
+    const newDevice = await navigator.usb.requestDevice({ filters: [{ }] });
     console.log('USB-Gerät ausgewählt:', newDevice);
 
     await newDevice.open();
@@ -125,49 +125,101 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
 
 export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
   try {
-    console.log('Versuche, auf die USB-Kamera zuzugreifen...');
-    
-    // Ausgabe des `newDevice` Objekts zur Überprüfung
-    console.log('Neues USB-Gerät:', newDevice);
-
-    // Hole alle verfügbaren Video-Geräte
+    await navigator.mediaDevices.getUserMedia({audio: false, video: true});
+    console.log('Versuche, Kamerazugriff zu erhalten...');
     const devices = await navigator.mediaDevices.enumerateDevices();
-    console.log('Alle verfügbaren Geräte:', devices);
+    console.log('Gefundene Geräte:', devices);
 
-    // Filtere nach Videogeräten
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    console.log('Gefundene Video-Eingabegeräte:', videoDevices);
+    console.log('Videogeräte:', videoDevices);
 
-    // Finde die externe Kamera anhand des Gerätenamens oder nutze die erste verfügbare Kamera
-    const externalCamera = videoDevices.find(device => device.label.includes(newDevice.productName)) || videoDevices[0];
+    let selectedDeviceId;
+    if (newDevice) {
+      selectedDeviceId = videoDevices.find(device => device.label.includes(newDevice.productName))?.deviceId;
+      console.log('Ausgewähltes Gerät:', selectedDeviceId);
+    }
 
-    if (externalCamera) {
-      console.log('Externe Kamera gefunden:', externalCamera.label);
-      console.log('Verwende Gerät mit ID:', externalCamera.deviceId);
+    if (!selectedDeviceId && videoDevices.length > 0) {
+      selectedDeviceId = videoDevices[0].deviceId;
+      console.log('Fallback-Gerät:', selectedDeviceId);
+    }
 
-      // Verwende die Kamera-ID im `getUserMedia`-Aufruf
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: externalCamera.deviceId,
-        }
-      });
-
-      console.log('Erhaltener Videostream:', stream);
-
-      // Weise den Videostream der Video-Referenz zu
+    if (selectedDeviceId) {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
+      console.log('Erhaltener Stream:', stream);
       videoRef.current.srcObject = stream;
-      console.log('Videostream im Video-Element zugewiesen.');
       setVideoStreamActive(true);
     } else {
-      console.error('Keine passende externe Kamera gefunden.');
+      throw new Error('Keine Kamera gefunden.');
     }
   } catch (error) {
     console.error('Fehler beim Zugriff auf die Kamera:', error);
-    if (error.name === 'NotAllowedError') {
+    if (error.name === "NotAllowedError") {
       alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+    } else {
+      retryUSBDeviceConnection();
     }
   }
 }
+
+
+//TODO VIELLEICHT FÜR ZUKUNFT NÖTIG
+// Funktion zum Abrufen von Bildern von der Kamera und zur Anzeige auf einer Leinwand
+export async function startImageCapture(device, canvasRef, setImageSrc) {
+  if (!device) return;
+
+  try {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    // Simuliere einen Timer, der alle 2 Sekunden ein Bild von der Kamera abruft
+    setInterval(async () => {
+      // Abruf eines Bildes von der Kamera (hier müsstest du abhängig vom PTP-Protokoll oder dem spezifischen USB-Befehl handeln)
+      const photo = await captureImage(device);
+
+      // Das Bild auf das Canvas zeichnen
+      const img = new Image();
+      img.src = URL.createObjectURL(new Blob([photo], { type: 'image/jpeg' }));
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0);
+      };
+
+      // Bildquelle setzen (kann auch für den Download verwendet werden)
+      setImageSrc(img.src);
+    }, 2000); // Alle 2 Sekunden ein neues Bild abrufen
+  } catch (error) {
+    console.error('Fehler beim Abrufen des Bildes:', error);
+  }
+}
+
+// Beispiel einer Funktion, um ein Bild von der Kamera aufzunehmen (diese ist abhängig von der Kamera und dem Protokoll)
+async function captureImage(device) {
+  // Hier sendest du USB-Steuerbefehle an die Kamera, um ein Bild zu erfassen und es dann zurückzuholen
+  const result = await device.controlTransferIn({
+    requestType: 'class', // oder 'vendor', abhängig von der Kamera
+    recipient: 'interface',
+    request: 0x01, // Beispiel für einen USB-Befehl
+    value: 0x0100,
+    index: 0x00
+  }, 1024 * 64); // Empfangsgröße (angepasst auf die Größe des Bildes)
+
+  return result.data.buffer;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Funktion zum Umschalten der Kamera

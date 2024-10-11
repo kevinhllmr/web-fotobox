@@ -29,29 +29,24 @@ function PhotoMode() {
               console.error('Fehler beim Abrufen des Kamera-Zugriffs (extern):', error);
             }
           });
-        } else if (!Peripherie.hasExternCamera && !videoStreamActive) {
-          // Verwende die interne Kamera nur, wenn `hasExternCamera` auf `false` gesetzt ist
-          try {
-            await getCameraAccess(null, videoRef, setVideoStreamActive);
-          } catch (error) {
-            console.error('Fehler beim Abrufen des Kamera-Zugriffs (intern):', error);
-          }
+        } else {
+          getCameraAccess(null, videoRef, setVideoStreamActive);
         }
       } catch (error) {
         console.error('Fehler beim Verbinden des USB-Geräts:', error);
       }
     };
-  
+
     initializeCamera();
-  
+
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         videoRef.current.srcObject = null;
       }
     };
-  }, [cameraActive, device, videoStreamActive]);
-
+  }, [cameraActive, device]);
+  
   const handleRetakePicture = () => {
     setImageSrc(null);
     setPhotoTaken(false);
