@@ -60,7 +60,8 @@ function MainPage() {
       document.getElementsByClassName('phone')[0]
         .addEventListener('click', function (event) {
           localStorage.setItem("deviceUsed", "phone");
-          navigate(`/connectphone/`);
+          // navigate(`/connectphone/`);
+          navigate(`/connect/`);
         });
 
       document.getElementById('cloud').addEventListener('click', function (event) {
@@ -73,21 +74,23 @@ function MainPage() {
     }, []);
 
     async function toggleLanguage() {
-      if (localStorage.getItem("lang") === "de") {
-        lang_en();
-        localStorage.setItem("lang", "en");
-        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
-        document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
-  
-      } else {
-        lang_de();
-        localStorage.setItem("lang", "de");
-        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
-        document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+      if(document.getElementById("btn_lng") && document.getElementById("imglng")) {
+        if (localStorage.getItem("lang") === "de") {
+          lang_en();
+          localStorage.setItem("lang", "en");
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+          document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+    
+        } else {
+          lang_de();
+          localStorage.setItem("lang", "de");
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+          document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+        }
       }
     }
   

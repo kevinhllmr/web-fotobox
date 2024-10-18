@@ -8,6 +8,7 @@ import RemoteControl from './components/pages/RemoteControl';
 import AdminSettings from './components/pages/AdminSettings';
 import CloudAccess from './components/pages/CloudAccess'; 
 import Settings from './components/pages/Settings';  
+import Connect from './components/pages/Connect';  
 import { ProtectedRoute } from './components/controllers/Controller'; 
 
 const App = () => {
@@ -20,6 +21,7 @@ const App = () => {
         <Route path='/home/' element={<MainPage />} />
         <Route path='/photomode/' element={<PhotoMode />} />
         <Route path='/connectphone/' element={<ConnectPhone />} />
+        <Route path='/connect/' element={<Connect />} />
         <Route path='/remote/' element={<RemoteControl />} />
         <Route path='/cloud/' element={<CloudAccess />} />
         <Route 

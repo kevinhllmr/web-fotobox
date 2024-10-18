@@ -36,7 +36,7 @@ const ConnectPhone = () => {
                     console.warn('NFC Initialization failed:', error);
                 }
             } else {
-                alert('NFC is unavailable');
+                // alert('NFC is unavailable');
             }
         };
 
@@ -77,7 +77,7 @@ const ConnectPhone = () => {
         if (answer) {
             WebRTC.setRemoteDescription(answer);
             setRemoteDescriptionSet(true);
-            alert('Remote description set. Data channel should be established.');
+            // alert('Remote description set. Data channel should be established.');
             navigate(isMobile ? '/remote' : '/photomode');
         } else {
             alert('No answer provided. Please make sure the answer is generated.');
