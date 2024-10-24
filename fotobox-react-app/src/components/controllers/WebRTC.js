@@ -4,7 +4,10 @@ class WebRTC {
     constructor() {
         this.peer = null;
         this.dataChannel = null;
-        this.onDataCallback = null; // Store a callback to handle received data
+        this.onDataCallback = null;
+        this.buffer = '';
+        this.binarySender = null;
+        this.binaryReceiver = null;
     }
 
     createPeer(initiator, onSignal, onData, onConnect, onClose) {
@@ -17,8 +20,8 @@ class WebRTC {
         });
 
         this.peer.on('data', data => {
-            console.log('Data received from peer:', data.toString());
-            onData(data);
+            console.log('Data received from peer:', data);
+            this.handleIncomingData(data);
         });
 
         this.peer.on('connect', () => {
@@ -46,8 +49,8 @@ class WebRTC {
         });
 
         this.peer.on('data', data => {
-            console.log('Data received from peer:', data.toString());
-            onData(data);
+            console.log('Data received from peer:', data);
+            this.handleIncomingData(data);
         });
 
         this.peer.on('connect', () => {
@@ -80,33 +83,80 @@ class WebRTC {
         if (this.dataChannel && message.trim() !== '') {
             console.log('Sending message:', message);
             this.dataChannel.send(message);
-        } else {
-            console.log('No data channel or empty message.');
+        } else if (!this.dataChannel) {
+            console.log('No data channel available.');
+        } else if (message.trim() === '') {
+            console.log('Attempted to send empty message.');
         }
-    }
-
-    onData(callback) {
-        this.onDataCallback = callback;
-        this.peer?.on('data', (data) => {
-            if (this.onDataCallback) {
-                this.onDataCallback(data.toString());
-            }
-        });
     }
 
     sendPhoto(photoData) {
-        if (this.dataChannel && photoData) {
-            console.log('Sending photo data:', photoData);
-            this.dataChannel.send(photoData);
-        } else if(!this.dataChannel) {
-            console.log('No data channel');
+        if (this.dataChannel) {
+            if (this.dataChannel.readyState === 'open') {
+                try {
+                    console.log('Sending photo data...');
+                    this.sendInChunks(photoData);
+                } catch (error) {
+                    console.error('Failed to send photo data:', error);
+                }
+            } else {
+                console.error('Data channel is not open. Cannot send photo.');
+            }
         } else {
-            console.log('No photo data.');
-            console.log(photoData)
+            console.error('Data channel is not defined.');
         }
     }
 
-    // nur für Testzwecke
+    sendInChunks(data) {
+        const chunkSize = 16384; // Size of each chunk
+        let offset = 0;
+
+        while (offset < data.length) {
+            const end = Math.min(offset + chunkSize, data.length);
+            const chunk = data.slice(offset, end);
+            this.dataChannel.send(chunk);
+            offset = end;
+        }
+    }
+
+    handleIncomingData(data) {
+        console.log('Raw data received:', data);
+    
+        if (typeof data === 'string') {
+            console.log('Received string data:', data);
+            this.buffer += data;
+    
+            let endIndex;
+            while ((endIndex = this.buffer.indexOf('}')) !== -1) {
+                const jsonString = this.buffer.substring(0, endIndex + 1);
+                try {
+                    const parsedData = JSON.parse(jsonString);
+                    if (this.onDataCallback) {
+                        this.onDataCallback(parsedData);
+                    }
+                } catch (error) {
+                    console.error('Failed to parse JSON:', error);
+                    console.error('Invalid JSON string:', jsonString);
+                }
+                this.buffer = this.buffer.substring(endIndex + 1);
+            }
+        } else if (data instanceof Uint8Array) {
+            console.log('Received binary data of length:', data.length);
+            console.log('Received binary data:', Array.from(data)); // Log as a regular array
+    
+            // Call the callback with the binary data
+            this.onDataCallback && this.onDataCallback(data);
+        } else {
+            console.error('Received unsupported data type:', data);
+        }
+    }
+    
+    
+    onData(callback) {
+        this.onDataCallback = callback;
+    }
+
+    // For test purposes
     copyToClipboard = (text) => {
         console.log('Copying text to clipboard:', text);
         try {
