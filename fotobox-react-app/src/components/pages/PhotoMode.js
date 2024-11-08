@@ -22,14 +22,13 @@ function PhotoMode() {
     const initializeCamera = async () => {
       try {
         if (Peripherie.hasExternCamera && !device) {
-          await connectUSBDevice(setDevice, async (device) => {
-            try {
-              await getCameraAccess(device, videoRef, setVideoStreamActive);
-            } catch (error) {
-              console.error('Fehler beim Abrufen des Kamera-Zugriffs (extern):', error);
-            }
-          });
+          // Verwendet die externe Kamera über die Camera-Klasse
+          const camera = new Camera();
+          await camera.connect();
+          setDevice(camera);  // Kamera-Gerät als Objekt speichern
+          await getCameraAccess(camera, videoRef, setVideoStreamActive);  // Zugriff auf die externe Kamera
         } else {
+          // Verwendet die interne Kamera des Geräts
           getCameraAccess(null, videoRef, setVideoStreamActive);
         }
       } catch (error) {
@@ -46,7 +45,7 @@ function PhotoMode() {
       }
     };
   }, [cameraActive, device]);
-  
+
   const handleRetakePicture = () => {
     setImageSrc(null);
     setPhotoTaken(false);

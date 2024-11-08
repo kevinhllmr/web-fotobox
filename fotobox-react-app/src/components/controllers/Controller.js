@@ -1,4 +1,5 @@
 import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
+import { Camera } from './camera';
 
 // IndexedDB öffnen oder erstellen
 function openDatabase() {
@@ -92,30 +93,19 @@ export async function deleteDataFromIndexedDB() {
   }
 }
 
-// Funktion zur Verbindung mit dem USB-Gerät
+import { Camera } from './camera';
+
+// Funktion zur Verbindung mit der externen Kamera
 export async function connectUSBDevice(setDevice, getCameraAccess) {
   try {
     console.log('Starte USB-Geräteverbindung...');
 
-    const newDevice = await navigator.usb.requestDevice({ filters: [{ }] });
-    console.log('USB-Gerät ausgewählt:', newDevice);
+    const camera = new Camera();
+    await camera.connect(); // Verbindet mit der Kamera über die libusb-Bibliothek
+    console.log('USB-Gerät erfolgreich verbunden:', camera);
 
-    await newDevice.open();
-    console.log('USB-Gerät geöffnet.');
-
-    if (newDevice.configuration === null) {
-      await newDevice.selectConfiguration(1);
-      console.log('Konfiguration für USB-Gerät ausgewählt.');
-    }
-
-    
-    await newDevice.claimInterface(0);
-    console.log('Interface für USB-Gerät beansprucht.');
-
-    setDevice(newDevice);
-    console.log('Gerät gespeichert:', newDevice);
-
-    getCameraAccess(newDevice);
+    setDevice(camera);
+    getCameraAccess(camera);
   } catch (error) {
     console.error('Error connecting USB device:', error);
     if (error.name === 'SecurityError') {
@@ -124,44 +114,29 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
   }
 }
 
-export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive) {
+export async function getCameraAccess(device, videoRef, setVideoStreamActive) {
   try {
-    await navigator.mediaDevices.getUserMedia({audio: false, video: true});
     console.log('Versuche, Kamerazugriff zu erhalten...');
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    console.log('Gefundene Geräte:', devices);
-
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    console.log('Videogeräte:', videoDevices);
-
-    let selectedDeviceId;
-    if (newDevice) {
-      selectedDeviceId = videoDevices.find(device => device.label.includes(newDevice.productName))?.deviceId;
-      console.log('Ausgewähltes Gerät:', selectedDeviceId);
-    }
-
-    if (!selectedDeviceId && videoDevices.length > 0) {
-      selectedDeviceId = videoDevices[0].deviceId;
-      console.log('Fallback-Gerät:', selectedDeviceId);
-    }
-
-    if (selectedDeviceId) {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
-      console.log('Erhaltener Stream:', stream);
+    if (device) {
+      const stream = await device.capturePreviewAsBlob();
       videoRef.current.srcObject = stream;
       setVideoStreamActive(true);
     } else {
-      throw new Error('Keine Kamera gefunden.');
+      // Zugriff auf die interne Kamera
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoRef.current.srcObject = stream;
+      setVideoStreamActive(true);
     }
   } catch (error) {
     console.error('Fehler beim Zugriff auf die Kamera:', error);
     if (error.name === "NotAllowedError") {
-      alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut. Error:' + error.name);
+      alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
     } else {
-      retryUSBDeviceConnection();
+      console.error('Unbekannter Fehler:', error);
     }
   }
 }
+
 
 
 //TODO VIELLEICHT FÜR ZUKUNFT NÖTIG
@@ -208,18 +183,6 @@ async function captureImage(device) {
 
   return result.data.buffer;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
