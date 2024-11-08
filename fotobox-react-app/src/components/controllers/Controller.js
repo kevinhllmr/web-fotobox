@@ -108,6 +108,7 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
       console.log('Konfiguration für USB-Gerät ausgewählt.');
     }
 
+    
     await newDevice.claimInterface(0);
     console.log('Interface für USB-Gerät beansprucht.');
 
@@ -155,7 +156,7 @@ export async function getCameraAccess(newDevice, videoRef, setVideoStreamActive)
   } catch (error) {
     console.error('Fehler beim Zugriff auf die Kamera:', error);
     if (error.name === "NotAllowedError") {
-      alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+      alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut. Error:' + error.name);
     } else {
       retryUSBDeviceConnection();
     }
