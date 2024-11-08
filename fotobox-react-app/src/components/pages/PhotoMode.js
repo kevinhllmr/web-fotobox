@@ -4,6 +4,7 @@ import './PhotoMode.css';
 import { connectUSBDevice, getCameraAccess, startCountdown, takePicture, downloadImage, saveImageToIndexedDB } from '../controllers/Controller.js';
 import Peripherie from '../controllers/Peripherie.js';
 import { useNavigate } from 'react-router-dom';
+import { Camera } from '../controllers/camera.js';
 
 function PhotoMode() {
   const navigate = useNavigate();

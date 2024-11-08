@@ -93,7 +93,6 @@ export async function deleteDataFromIndexedDB() {
   }
 }
 
-import { Camera } from './camera';
 
 // Funktion zur Verbindung mit der externen Kamera
 export async function connectUSBDevice(setDevice, getCameraAccess) {
