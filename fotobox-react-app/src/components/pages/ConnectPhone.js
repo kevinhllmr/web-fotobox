@@ -27,7 +27,7 @@ const ConnectPhone = () => {
         return () => window.removeEventListener('resize', handleWindowSizeChange);
     }, [width]);
 
-    // Tablet: 将 offer JSON 写入 NFC 标签
+    // Tablet: Write the offer JSON to the NFC tag
     const handleWriteOfferToNFC = () => {
         if (offer.trim() !== '') {
             if ('NDEFReader' in window){
@@ -46,7 +46,7 @@ const ConnectPhone = () => {
     };
 
 
-    // Mobile: 扫描 NFC 并将内容复制到 offer JSON 文本框
+    // Mobile: Scan NFC and copy the content into the offer JSON text box
     const handleScanOfferFromNFC = async () => {
         if ('NDEFReader' in window){
             await handleScan(setOffer);
@@ -58,7 +58,7 @@ const ConnectPhone = () => {
         
     };
 
-    // Tablet: 扫描 NFC 并将内容复制到 answer JSON 文本框
+    // Tablet: Scan NFC and copy the content to the answer JSON text box
     const handleScanAnswerFromNFC = async () => {
         if (!isMobile) {
             if ('NDEFReader' in window)
@@ -79,7 +79,7 @@ const ConnectPhone = () => {
         }
     };
 
-    // Mobile: 将 answer JSON 写入 NFC 标签
+    // Mobile: Write the answer JSON to the NFC tag
     const handleWriteAnswerToNFC = () => {
         if (answer.trim() !== '' ) {
             if('NDEFReader' in window){
