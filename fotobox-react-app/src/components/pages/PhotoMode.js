@@ -73,6 +73,7 @@ function PhotoMode() {
   };
 
   return (
+    
     <div className="PhotoMode">
       <img id="bg" src={process.env.PUBLIC_URL + '/images/home-bg.png'} alt="Background" />
       <header className="App-header">
