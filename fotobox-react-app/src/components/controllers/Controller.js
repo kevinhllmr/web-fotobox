@@ -94,33 +94,105 @@ export async function deleteDataFromIndexedDB() {
 }
 
 
-// Funktion zur Verbindung mit der externen Kamera
-export async function connectUSBDevice(setDevice, getCameraAccess) {
+// Funktion, um verfügbare USB-Geräte anzuzeigen und auszuwählen
+export async function showAvailableUSBDevices(setDevice) {
   try {
-    console.log('Starte USB-Geräteverbindung...');
+    console.log("Zeige verfügbare USB-Geräte an...");
+    const device = await navigator.usb.requestDevice({
+      filters: [{ classCode: 6, subclassCode: 1 }] // PTP/MTP Filter
+    });
 
-    const camera = new Camera();
-    await camera.connect(); // Verbindet mit der Kamera über die libusb-Bibliothek
-    console.log('USB-Gerät erfolgreich verbunden:', camera);
+    if (device) {
+      console.log("Gerät ausgewählt:", device);
+      const camera = new Camera();
+      await camera.connect();
+      console.log("Kamera verbunden:", camera);
 
-    setDevice(camera);
-    getCameraAccess(camera);
+      // Das ausgewählte Gerät speichern
+      setDevice(camera);
+    } else {
+      console.warn("Kein Gerät ausgewählt.");
+    }
   } catch (error) {
-    console.error('Error connecting USB device:', error);
-    if (error.name === 'SecurityError') {
-      alert('Zugriff auf USB-Gerät verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
+    console.error("Fehler bei der Geräteauswahl:", error);
+    if (error.name === "NotAllowedError") {
+      alert(
+        "Zugriff auf USB-Geräte wurde verweigert. Bitte erlauben Sie den Zugriff."
+      );
     }
   }
 }
 
+
+export async function connectUSBDevice(setDevice, getCameraAccess) {
+  try {
+    console.log("Starte USB-Geräteverbindung...");
+
+    if (!navigator.usb) {
+      alert("Ihr Browser unterstützt keine WebUSB-API.");
+      return;
+    }
+
+    const camera = new Camera();
+    await camera.connect(); // Verbindung mit der Kamera herstellen
+    console.log("USB-Gerät erfolgreich verbunden:", camera);
+
+    setDevice(camera);
+    getCameraAccess(camera);
+  } catch (error) {
+    console.error("Error connecting USB device:", error);
+
+    // Fehlerbehandlung: Bei Fehler erneut verfügbare Geräte anzeigen
+    if (error.name === "NotFoundError") {
+      console.warn("Kein USB-Gerät gefunden. Starte Geräteauswahl...");
+      await showAvailableUSBDevices(setDevice);
+    } else if (error.name === "SecurityError") {
+      alert(
+        "Zugriff auf USB-Gerät verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut."
+      );
+    }
+  }
+}
+
+// Funktion zur Auswahl eines USB-Geräts mit WebUSB
+export async function selectUSBDevice(setDevice) {
+  try {
+    console.log("Zeige verfügbare USB-Geräte an...");
+    const device = await navigator.usb.requestDevice({
+      filters: [{ classCode: 6, subclassCode: 1 }], // PTP/MTP Filter
+    });
+
+    if (device) {
+      console.log("Gerät ausgewählt:", device);
+      const camera = new Camera();
+      await camera.connect();
+      console.log("Kamera verbunden:", camera);
+
+      setDevice(camera); // Kamera speichern
+      return camera;
+    } else {
+      console.warn("Kein Gerät ausgewählt. Fallback auf Standardkamera.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Fehler bei der Geräteauswahl:", error);
+    if (error.name === "NotAllowedError") {
+      alert("Zugriff auf USB-Geräte verweigert. Standardkamera wird verwendet.");
+    }
+    return null;
+  }
+}
+
+
 export async function getCameraAccess(device, videoRef, setVideoStreamActive) {
   try {
     console.log('Versuche, Kamerazugriff zu erhalten...');
-    if (device) {
+    if (device && typeof device.capturePreviewAsBlob === 'function') {
       const stream = await device.capturePreviewAsBlob();
       videoRef.current.srcObject = stream;
       setVideoStreamActive(true);
     } else {
+      console.warn("Kein gültiges Gerät gefunden. Fallback auf interne Kamera.");
       // Zugriff auf die interne Kamera
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoRef.current.srcObject = stream;
@@ -135,6 +207,7 @@ export async function getCameraAccess(device, videoRef, setVideoStreamActive) {
     }
   }
 }
+
 
 
 

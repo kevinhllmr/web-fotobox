@@ -41,21 +41,29 @@ export class Camera {
             ]
         });
     }
-async connect() {
-    if (!ModulePromise) {
-        console.log('Initialisiere WebAssembly-Modul...');
-        ModulePromise = initModule();
-    }
-    try {
-        let Module = await ModulePromise;
-        console.log('WebAssembly-Modul geladen:', Module);
-        this.#context = await new Module.Context();
-        console.log('Kamera-Kontext erfolgreich initialisiert');
-    } catch (error) {
-        console.error('Fehler bei der Initialisierung der Kamera:', error);
-        rethrowIfCritical(error);
-    }
-}
+    async connect() {
+        if (!ModulePromise) {
+          console.log('Initialisiere WebAssembly-Modul...');
+          ModulePromise = initModule().catch(err => {
+            console.error("Fehler beim Laden des WebAssembly-Moduls:", err);
+            throw err;
+          });
+        }
+        try {
+          const Module = await ModulePromise;
+          this.#context = new Module.Context();
+          console.log('Kamera-Kontext erfolgreich initialisiert');
+        } catch (error) {
+          if (error instanceof WebAssembly.RuntimeError) {
+            console.error('WebAssembly-Laufzeitfehler:', error);
+            alert('Es gab ein Problem mit der Kamera-Initialisierung. Bitte versuchen Sie es erneut.');
+          } else {
+            console.error('Fehler bei der Initialisierung der Kamera:', error);
+          }
+          rethrowIfCritical(error);
+        }
+      }
+      
 
     async #schedule(op) {
         let res = this.#queue.then(() => op(this.#context));
