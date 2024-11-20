@@ -30,20 +30,24 @@ const ConnectPhone = () => {
     // Tablet: Write the offer JSON to the NFC tag
     const handleWriteOfferToNFC = () => {
         if (offer.trim() !== '') {
-            if ('NDEFReader' in window){
+            if ('NDEFReader' in window) {
                 handleWrite(offer)
-                    .then(() => alert('Successfully wrote Offer JSON to the NFC tag!'))
-                    .catch(error => console.error('Fail :', error));
-            }
-            else{
+                    .then(() => {
+                        alert('Successfully wrote Offer JSON to the NFC tag!');
+                    })
+                    .catch(error => {
+                        console.error('Failed to write data to NFC tag:', error);
+                        alert(error);
+                        alert('Failed to write data to NFC tag. Please try again.');
+                    });
+            } else {
                 alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
-                return;
             }
-            
         } else {
-            alert('Offer JSON is empty，please input valid content before writing.');
+            alert('Offer JSON is empty, please input valid content before writing.');
         }
     };
+    
 
 
     // Mobile: Scan NFC and copy the content into the offer JSON text box
