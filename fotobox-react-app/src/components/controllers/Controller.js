@@ -1,5 +1,5 @@
 import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
-import { Camera } from './camera';
+import { Camera } from '../build/camera';
 
 // IndexedDB öffnen oder erstellen
 function openDatabase() {
@@ -154,10 +154,9 @@ export async function connectUSBDevice(setDevice, getCameraAccess) {
   }
 }
 
-// Funktion zur Auswahl eines USB-Geräts mit WebUSB
 export async function selectUSBDevice(setDevice) {
   try {
-    console.log("Zeige verfügbare USB-Geräte an...");
+    console.log("Zeige verfügbares USB-Gerät an...");
     const device = await navigator.usb.requestDevice({
       filters: [{ classCode: 6, subclassCode: 1 }], // PTP/MTP Filter
     });
@@ -171,42 +170,51 @@ export async function selectUSBDevice(setDevice) {
       setDevice(camera); // Kamera speichern
       return camera;
     } else {
-      console.warn("Kein Gerät ausgewählt. Fallback auf Standardkamera.");
+      console.warn("Kein Gerät ausgewählt.");
       return null;
     }
   } catch (error) {
     console.error("Fehler bei der Geräteauswahl:", error);
-    if (error.name === "NotAllowedError") {
-      alert("Zugriff auf USB-Geräte verweigert. Standardkamera wird verwendet.");
-    }
     return null;
   }
 }
 
 
+
 export async function getCameraAccess(device, videoRef, setVideoStreamActive) {
   try {
-    console.log('Versuche, Kamerazugriff zu erhalten...');
-    if (device && typeof device.capturePreviewAsBlob === 'function') {
-      const stream = await device.capturePreviewAsBlob();
-      videoRef.current.srcObject = stream;
-      setVideoStreamActive(true);
-    } else {
-      console.warn("Kein gültiges Gerät gefunden. Fallback auf interne Kamera.");
-      // Zugriff auf die interne Kamera
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-      setVideoStreamActive(true);
-    }
+      console.log('Versuche, auf die Kamera zuzugreifen...', device);
+      
+      // Überprüfen, ob `device` und die Methode `getSupportedOps` existieren
+      if (device && typeof device.getSupportedOps === "function") {
+          const supportedOps = await device.getSupportedOps();
+          console.log("Unterstützte Operationen:", supportedOps);
+
+          // Wenn `capturePreview` unterstützt wird, benutze die Vorschau
+          if (supportedOps.capturePreview) {
+              const blob = await device.capturePreviewAsBlob();
+              videoRef.current.srcObject = URL.createObjectURL(blob);
+              setVideoStreamActive(true);
+          } else {
+              // Fallback, wenn `capturePreview` nicht unterstützt wird
+              console.warn("Vorschau wird nicht unterstützt. Fallback auf interne Kamera.");
+              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              videoRef.current.srcObject = stream;
+              setVideoStreamActive(true);
+          }
+      } else {
+          // Fallback auf interne Kamera, falls `device` nicht existiert
+          console.warn('Keine gültige Kamera gefunden. Fallback auf interne Kamera.');
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          videoRef.current.srcObject = stream;
+          setVideoStreamActive(true);
+      }
   } catch (error) {
-    console.error('Fehler beim Zugriff auf die Kamera:', error);
-    if (error.name === "NotAllowedError") {
-      alert('Kamerazugriff wurde verweigert. Bitte erlauben Sie den Zugriff und versuchen Sie es erneut.');
-    } else {
-      console.error('Unbekannter Fehler:', error);
-    }
+      console.error('Fehler beim Zugriff auf die Kamera:', error);
+      throw error;
   }
 }
+
 
 
 
