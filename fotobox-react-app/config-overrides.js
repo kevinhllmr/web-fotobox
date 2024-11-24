@@ -1,51 +1,39 @@
-// config-overrides.js
 const webpack = require('webpack');
 
 module.exports = function override(config) {
-  // Fallback für `process`-Modul hinzufügen
+  // Fallbacks für Node.js-Module, die im Browser nicht verfügbar sind
   config.resolve.fallback = {
     ...config.resolve.fallback,
-    "process": require.resolve("process/browser.js") // `.js`-Erweiterung hinzufügen
+    process: require.resolve('process/browser.js'), // Für `process`-Modul
+    buffer: require.resolve('buffer/'),         // Falls Buffer benötigt wird
+    fs: false,                                  // Deaktiviere fs, da es im Browser nicht unterstützt wird
   };
 
-  // config-overrides.js
-  module.exports = {
-  // Extend/override the dev server configuration used by CRA
-  // See: https://github.com/timarney/react-app-rewired#extended-configuration-options
-  devServer: function(configFunction) {
-    return function(proxy, allowedHost) {
-      // Create the default config by calling configFunction with the proxy/allowedHost parameters
-      // Default config: https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
-      const config1 = configFunction(proxy, allowedHost);
-      // Set X-Frame-Options header
-      config1.headers = {      
-        "Cross-Origin-Opener-Policy": "same-origin",
-        "Cross-Origin-Embedder-Policy": "require-corp"}
-      return config1;
-    };
-  },
-};
-  
-  // DevServer-Header für Cross-Origin Isolation
- /* config.devServer = {
+  // WebAssembly- und Cross-Origin-Unterstützung aktivieren
+  config.experiments = {
+    ...config.experiments,
+    asyncWebAssembly: true, // Aktiviert asynchrone WebAssembly-Unterstützung
+    topLevelAwait: true,    // Unterstützt await auf oberster Ebene
+  };
+
+  // DevServer-Header für Cross-Origin Isolation (notwendig für WebAssembly)
+  config.devServer = {
     ...config.devServer,
     headers: {
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp"
-    }
-  };*/
-  
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  };
 
-  // Plugin für `process`-Zugriff bereitstellen
+  // Plugins hinzufügen, um `process` und andere globale Variablen bereitzustellen
   config.plugins = (config.plugins || []).concat([
     new webpack.ProvidePlugin({
-      process: 'process/browser.js' //.JS WIRD BENÖTIGT
+      process: 'process/browser.js', // Stellt das `process`-Modul bereit
+    }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'], // Stellt `Buffer` bereit
     }),
   ]);
-
-  module.exports = {
-    
-}
 
   return config;
 };
