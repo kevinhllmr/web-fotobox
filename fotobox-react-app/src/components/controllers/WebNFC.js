@@ -1,72 +1,116 @@
-export const handleScan = async (setAnswer) => {
+import pako from "pako";
+
+export const handleScan = async (setJsonData) => {
   try {
     if ('NDEFReader' in window) {
       const ndef = new NDEFReader();
 
+      console.log("Starting NFC tag scan...");
       await ndef.scan();
 
+      // webnfc write function
       ndef.onreading = (event) => {
         const { message } = event;
-        let data = "";
 
+        console.log("NFC tag detected. Processing records...");
         for (const record of message.records) {
-          if (record.recordType === "text") {
-            const decoder = new TextDecoder(record.encoding || "utf-8");
-            const textContent = decoder.decode(record.data);
-            data += textContent;  
-          }
-        }
+          if (record.recordType === "mime" && record.mediaType === "application/json") {
+            const decoder = new TextDecoder();
+            const compressedData = decoder.decode(record.data);
+             // 解压缩数据
+             const jsonString = decompressJson(compressedData);
+             const jsonData = JSON.parse(jsonString);
 
-        if (data) {
-          console.log("Data read from NFC is complete and valid:", data);
-          setAnswer(data);  
-          alert("Successfully read data from NFC tag!");
-        } else {
-          console.error("No valid data read from NFC tag.");
-          alert("No valid data read. Please try scanning the NFC tag again.");
+            // 调用回调函数设置 JSON 数据
+            setJsonData(jsonData);
+
+            alert("Successfully read JSON data from NFC tag!");
+          } else {
+            console.warn("Unsupported record type or media type:", record.recordType, record.mediaType);
+          }
         }
       };
     } else {
-      alert("NFC is not supported on this device or browser.");
-      console.error("NFC is not supported on this device.");
+      alert("Your device or browser does not support WebNFC.");
     }
   } catch (error) {
-    console.error("Failed to read NFC:", error);
-    alert("NFC read failed. Please try again or use a device with NFC support.");
+    alert("Failed to scan NFC tag. Please try again.");
   }
 };
 
 
-export const handleWrite = async (message) => {
+
+export const handleWrite = async (jsonData) => {
   try {
     if ('NDEFReader' in window) {
       const ndef = new NDEFReader();
 
-      const checksum = message.length;
-      const messageWithChecksum = `${message}|checksum:${checksum}`;
+    // 将 JSON 数据序列化为字符串
+      const jsonString = JSON.stringify(jsonData);
+      const originalLength = jsonString.length;
 
-      if (!messageWithChecksum || typeof messageWithChecksum !== 'string' || messageWithChecksum.trim().length === 0) {
-        alert("Invalid or incomplete data. Writing aborted.");
-        console.error("Invalid or incomplete data.");
-        return;
-      }
+      // 使用 TextEncoder 将字符串转换为 ArrayBuffer
+      const encoder = new TextEncoder();
+      // 压缩 JSON 数据
+      const compressedData = compressJson(jsonString);
+      const compressedLength = compressedData.length;
 
-      console.log("Writing to NFC tag:", messageWithChecksum);
+      alert(`Original JSON size: ${originalLength} characters\nCompressed size: ${compressedLength} characters`);
 
-      await ndef.write({ records: [{ recordType: "text", data: messageWithChecksum }] });
-      console.log("Successfully written to NFC tag:", messageWithChecksum);
-      alert("Data successfully written to NFC tag!");
+          // 转换压缩数据为 ArrayBuffer
+      const arrayBufferData = new TextEncoder().encode(compressedData);
+      // 写入 JSON 数据到 NFC 标签
+      await ndef.write({
+        records: [
+          {
+            recordType: "mime", // MIME 类型记录
+            mediaType: "application/json", // JSON 的 MIME 类型
+            data: arrayBufferData, // 压缩数据
+          },
+        ],
+      });
 
+      console.log("JSON data successfully written to NFC tag:", jsonString);
+      alert("JSON data successfully written to NFC tag!");
     } else {
-      alert("Your device does not support NFC Writer functionality!");
-      console.error("NFC Writer not supported on this device or browser.");
+      alert("Your device or browser does not support WebNFC.");
+      console.error("WebNFC is not supported on this browser or device.");
     }
   } catch (error) {
-    console.error("Failed to write NFC:", error);
-    alert(error);
-    alert("Failed to write data to NFC tag. Please try again.");
+    console.error("Failed to write JSON data to NFC tag:", error);
+
+    if (error.name === "NetworkError") {
+      alert("Failed to write due to an IO error. Ensure the NFC tag is writable and try again.");
+    } else {
+      alert(error);
+    }
   }
 };
+
+export const compressJson = (jsonString) => {
+  try {
+    const compressed = pako.gzip(jsonString); // Gzip 压缩
+    const base64Compressed = btoa(String.fromCharCode(...compressed)); // 转为 Base64
+    return base64Compressed;
+  } catch (error) {
+    console.error("Compression error:", error);
+    throw error;
+  }
+};
+
+// 解压缩 JSON 数据
+export const decompressJson = (compressedString) => {
+  try {
+    const binaryString = atob(compressedString); // Base64 转回二进制字符串
+    const compressed = Uint8Array.from(binaryString, (c) => c.charCodeAt(0)); // 转为 Uint8Array
+    const jsonString = pako.ungzip(compressed, { to: "string" }); // 解压为字符串
+    return jsonString;
+  } catch (error) {
+    console.error("Decompression error:", error);
+    throw error;
+  }
+};
+
 
 
 export const handlesurfwithNfc = ()=>{
