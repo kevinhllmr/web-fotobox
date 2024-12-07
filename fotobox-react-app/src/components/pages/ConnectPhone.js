@@ -5,6 +5,8 @@ import '../../App.css';
 import './ConnectPhone.css';
 import { FaCopy, FaWifi } from 'react-icons/fa';
 import { handleScan, handleWrite } from '../controllers/WebNFC';
+import pako from "pako";
+
 
 const ConnectPhone = () => {
     const [width, setWidth] = useState(window.innerWidth);
@@ -179,6 +181,18 @@ const ConnectPhone = () => {
             handleSendMessage();
         }
     };
+
+    const testCompression = () => {
+    const jsonString = JSON.stringify({ key: "value" });
+    const compressed = pako.gzip(jsonString);
+    const decompressed = pako.ungzip(compressed, { to: "string" });
+
+    console.log("Original:", jsonString);
+    console.log("Compressed:", compressed);
+    console.log("Decompressed:", decompressed);
+    };
+
+    testCompression();
 
 
     return (
