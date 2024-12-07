@@ -1,119 +1,89 @@
-import initModule from './libapi.mjs';
-
+/*
+ * Copyright 2023 Google LLC
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+import initModule from '../build/libapi.mjs';
 // A helper that allows to distinguish critical errors from library errors.
 export function rethrowIfCritical(err) {
+    // If it's precisely Error, it's a custom error; anything else - SyntaxError,
+    // WebAssembly.RuntimeError, TypeError, etc. - is treated as critical here.
     if (err?.constructor !== Error) {
         throw err;
     }
 }
-
 const INTERFACE_CLASS = 6; // PTP
 const INTERFACE_SUBCLASS = 1; // MTP
 let ModulePromise;
-
 export class Camera {
     #queue = Promise.resolve();
     #context = null;
-
     static async showPicker() {
-        try {
-            const device = await navigator.usb.requestDevice({
-                filters: [
-                    {
-                        classCode: INTERFACE_CLASS,
-                        subclassCode: INTERFACE_SUBCLASS
-                    }
-                ]
-            });
-            console.log("Device selected:", device);
-            return device;
-        } catch (error) {
-            console.error("Error selecting device:", error);
-            throw error;
-        }
+        // @ts-ignore
+        await navigator.usb.requestDevice({
+            filters: [
+                {
+                    classCode: INTERFACE_CLASS,
+                    subclassCode: INTERFACE_SUBCLASS
+                }
+            ]
+        });
     }
-
     async connect() {
         if (!ModulePromise) {
-            console.log('Initializing WebAssembly module...');
-            ModulePromise = initModule().catch(err => {
-                console.error("Error loading WebAssembly module:", err);
-                throw err;
-            });
+            ModulePromise = initModule();
         }
-
-        try {
-            const Module = await ModulePromise;
-            this.#context = new Module.Context();
-            console.log('Camera context successfully initialized:', this.#context);
-
-            // Log available methods on context
-            console.log("Available methods in context:", Object.keys(this.#context));
-        } catch (error) {
-            console.error('Error initializing camera context:', error);
-            rethrowIfCritical(error);
-        }
+        let Module = await ModulePromise;
+        this.#context = await new Module.Context();
     }
-
     async #schedule(op) {
         let res = this.#queue.then(() => op(this.#context));
         this.#queue = res.catch(rethrowIfCritical);
         return res;
     }
-
     async disconnect() {
         if (this.#context && !this.#context.isDeleted()) {
-            console.log("Disconnecting camera context...");
             this.#context.delete();
         }
     }
-
     async getConfig() {
-        return this.#schedule(context => {
-            console.log("Getting configuration...");
-            return context.configToJS();
-        });
+        return this.#schedule(context => context.configToJS());
     }
-
     async getSupportedOps() {
         if (this.#context) {
-            console.log("Verfügbare Methoden im Kontext:", Object.keys(this.#context));
-            if (typeof this.#context.supportedOps === "function") {
-                const ops = await this.#context.supportedOps();
-                console.log("Unterstützte Operationen:", ops);
-                return ops;
-            } else {
-                console.warn("supportedOps ist keine Funktion im Kontext.");
-                return {};
-            }
+            return await this.#context.supportedOps();
         }
-        throw new Error('Kamera-Kontext nicht initialisiert.');
+        throw new Error('You need to connect to the camera first');
     }
-    
-    
-
     async setConfigValue(name, value) {
-        console.log(`Setting config value: ${name} = ${value}`);
         let uiTimeout;
         await this.#schedule(context => {
+            // This is terrible, yes... but some configs return too quickly before they're actually updated.
+            // We want to wait some time before updating the UI in that case, but not block subsequent ops.
             uiTimeout = new Promise(resolve => setTimeout(resolve, 800));
             return context.setConfigValue(name, value);
         });
         await uiTimeout;
     }
-
     async capturePreviewAsBlob() {
-        console.log("Capturing preview as blob...");
         return this.#schedule(context => context.capturePreviewAsBlob());
     }
-
     async captureImageAsFile() {
-        console.log("Capturing image as file...");
         return this.#schedule(context => context.captureImageAsFile());
     }
-
     async consumeEvents() {
-        console.log("Consuming events...");
         return this.#schedule(context => context.consumeEvents());
     }
 }
