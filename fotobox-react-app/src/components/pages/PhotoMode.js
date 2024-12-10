@@ -183,7 +183,7 @@ function PhotoMode() {
               </>
             ) : (
               <>
-                <img id="captured" src={imageSrc} alt="Captured" />
+                <img class="camera-preview" src={imageSrc} alt="Captured" />
                 <div className="button-container">
                   <button className="start-button" onClick={handleRetakePicture}>
                     Neues Foto
