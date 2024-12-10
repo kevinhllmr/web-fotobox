@@ -1,154 +1,150 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "./PhotoMode.css";
-import { saveImageToIndexedDB, startCountdown } from "../controllers/Controller.js";
+import { saveImageToIndexedDB, deleteLastImageFromIndexedDB, startCountdown } from "../controllers/Controller.js";
 import { useNavigate } from "react-router-dom";
 import { Camera } from "../build/camera.js"; // Importiere die Camera-Klasse von web-gphoto2
 
 function PhotoMode() {
   const navigate = useNavigate();
+  const [camera, setCamera] = useState(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
   const [showButtons, setButtonsShown] = useState(false);
   const [timerValue, setTimerValue] = useState(3);
   const [countdown, setCountdown] = useState(0);
-  const [device, setDevice] = useState(null); // Zuständig für das Kameragerät
-  const camera = new Camera(); // Kamera-Instanz
+  const [blobURL, setBlobURL] = useState(null);
+  const [streamIntervalId, setStreamIntervalId] = useState(null); // Intervall-ID für den Stream
 
-  const [blobURL, setBlobURL] = useState(null); // Hier speichern wir den Blob-URL für die Vorschau
+  useEffect(() => {
+    const handleUnload = async () => {
+      console.log("Seite wird neugeladen, Kamera wird getrennt.");
+      await cleanupResources();
+    };
 
-  // Initialisiere die Kamera
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [camera, streamIntervalId]);
+
+  const cleanupResources = async () => {
+    if (streamIntervalId) {
+      clearInterval(streamIntervalId);
+      setStreamIntervalId(null);
+      console.log("Video-Stream gestoppt.");
+    }
+    if (camera) {
+      try {
+        await camera.disconnect();
+        console.log("Kamera erfolgreich getrennt.");
+        setCamera(null);
+      } catch (error) {
+        console.error("Fehler beim Trennen der Kamera:", error);
+      }
+    }
+  };
+
   const initializeCamera = async () => {
     try {
       console.log("Initializing camera...");
-      // Zeige den Picker, um verfügbare Kameras auszuwählen
-      await Camera.showPicker();
+      const newCamera = new Camera();
+      await Camera.showPicker(); // Zeige den Picker
+      await newCamera.connect(); // Verbinde mit der Kamera
+      setCamera(newCamera);
 
-      // Verbinde mit der Kamera
-      await camera.connect();
+      console.log("Operations supported by the camera:", await newCamera.getSupportedOps());
+      console.log("Current configuration tree:", await newCamera.getConfig());
 
-      console.log("Operations supported by the camera:", await camera.getSupportedOps());
-      console.log("Current configuration tree:", await camera.getConfig())
-
-      // Sicherstellen, dass die Kamera vollständig verbunden ist, bevor wir fortfahren
+      // Vorschau starten
       setTimeout(async () => {
         try {
-          // Hole den ersten Blob von der Kamera für die Vorschau
-          const blob = await camera.capturePreviewAsBlob();
+          const blob = await newCamera.capturePreviewAsBlob();
           const imgURL = URL.createObjectURL(blob);
-
-          // Speichere den URL, um ihn in einem <img>-Tag anzuzeigen
           setBlobURL(imgURL);
-
-          // Kamera für das Preview-Stream vorbereiten
           setCameraActive(true);
-          setButtonsShown(true); // Zeige Buttons nach erfolgreicher Initialisierung
-
-          // Starte die kontinuierliche Frame-Abfrage für flüssige Vorschau
-          startVideoStream();
+          setButtonsShown(true);
+          startVideoStream(newCamera);
         } catch (error) {
           console.error("Fehler beim Abrufen der Kamera-Vorschau:", error);
         }
-      }, 1000); // Verzögerung, damit die Kamera sicher verbunden ist
-
+      }, 1000);
     } catch (error) {
       console.error("Fehler bei der Kamera-Initialisierung:", error);
     }
   };
 
-  // Funktion zum kontinuierlichen Abrufen von Kameraframes
-  const startVideoStream = () => {
+  const startVideoStream = (camera) => {
     const intervalId = setInterval(async () => {
       try {
-        // Hole den nächsten Frame als Blob
         const blob = await camera.capturePreviewAsBlob();
         const imgURL = URL.createObjectURL(blob);
-        setBlobURL(imgURL); // Setze die URL des Blobs für die Vorschau
+        setBlobURL(imgURL);
       } catch (error) {
         console.error("Fehler beim Abrufen des Kamera-Streams:", error);
-        clearInterval(intervalId); // Stoppe das Intervall bei Fehlern
+        clearInterval(intervalId);
+        setStreamIntervalId(null);
       }
-    }, 50); // Alle 50ms den nächsten Frame abfragen (20fps)
+    }, 50);
+    setStreamIntervalId(intervalId); // Speichere die Intervall-ID
   };
 
-  // Effekt zur Überwachung von cameraActive und videoRef
-  useEffect(() => {
-    if (cameraActive && !device) {
-      console.log("Starting camera initialization...");
-      initializeCamera();
-    }
-  }, [cameraActive]);
-
-  // Handling für den Start der Kamera-App
   const handleStartApp = () => {
     console.log("Starting camera app...");
-    setCameraActive(true);
+    initializeCamera();
   };
 
   const handleRetakePicture = () => {
     console.log("Retaking picture...");
     setImageSrc(null);
     setPhotoTaken(false);
-    setCameraActive(false);
-    setButtonsShown(false);
-    setTimeout(() => {
-      setCameraActive(true); // Starte die Kamera nach einem Retake
-    }, 2000);
+    setButtonsShown(true);
   };
 
-  const handleEndSession = () => {
-    console.log("Ending session...");
-    // Kamera-Verbindung trennen, wenn der Benutzer die Sitzung beendet
-    try {
-      camera.disconnect();
-      console.log("Kamera getrennt");
-    } catch (error) {
-      console.error("Fehler beim Trennen der Kamera:", error);
-    }
+  const handleDeleteLastPhoto = async () => {
+    console.log("Foto verwerfen...");
+    await deleteLastImageFromIndexedDB();
+    setImageSrc(null); // Bildquelle zurücksetzen
+    setPhotoTaken(false); // Zustand zurücksetzen
+    setButtonsShown(true); // Zeige die Buttons wieder an
+  };
+  
 
-    handleRetakePicture(); // Nach dem Beenden der Sitzung Retake
+  const handleEndSession = async () => {
+    console.log("Seite wird verlassen, Kamera wird getrennt.");
+    await cleanupResources();
     navigate("/home/");
+    window.location.reload();
   };
 
   const startPhotoCountdown = () => {
     console.log("Starting photo countdown...");
     setButtonsShown(false);
-    startCountdown(timerValue, setCountdown, capturePicture); // Aufrufen von capturePicture nach Countdown
-  };
-
-  const handleSavePicture = () => {
-    console.log("Saving picture...");
-    saveImageToIndexedDB(imageSrc); // Bild in IndexedDB speichern
-    handleRetakePicture(); // Nach dem Speichern Retake
+    startCountdown(timerValue, setCountdown, capturePicture);
   };
 
   const capturePicture = async () => {
+    if (!camera) {
+      console.error("Kamera ist nicht verbunden.");
+      return;
+    }
+
     try {
-
-      console.log("Operations supported by the camera:", await camera.getSupportedOps());
-      console.log("Current configuration tree:", await camera.getConfig())
-  
-      // Hole das vollständige Bild von der Kamera
+      console.log("Taking picture...");
       const file = await camera.captureImageAsFile();
-      
-      // Erstelle eine URL aus der Datei (z. B. JPEG)
+      saveImageToIndexedDB(file);
       const imgURL = URL.createObjectURL(file);
-  
-      // Zeige das aufgenommene Bild an
       setImageSrc(imgURL);
-      setBlobURL(null); // Stoppe den Live-Stream, indem wir den Bild-URL setzen
-      setPhotoTaken(true); // Bild aufgenommen
-
+      
+      setBlobURL(null);
+      setPhotoTaken(true);
     } catch (error) {
       console.error("Fehler beim Aufnehmen des Bildes:", error);
     }
   };
-  
-  
-  
-  
-  
+
   return (
     <div className="PhotoMode">
       <img
@@ -158,7 +154,6 @@ function PhotoMode() {
       />
       <header className="App-header">
         {!cameraActive ? (
-          // Zeige Start-Button vor Kamera-Initialisierung
           <button className="start-button" onClick={handleStartApp}>
             Start
           </button>
@@ -166,9 +161,7 @@ function PhotoMode() {
           <>
             {!photoTaken ? (
               <>
-                {/* Zeige das Bild vom Stream */}
                 <img src={blobURL} alt="Camera Preview" className="camera-preview" />
-
                 {showButtons && (
                   <div className="button-container">
                     <button className="start-button" onClick={startPhotoCountdown}>
@@ -190,14 +183,13 @@ function PhotoMode() {
               </>
             ) : (
               <>
-                {/* Zeige das aufgenommene Bild an */}
                 <img id="captured" src={imageSrc} alt="Captured" />
                 <div className="button-container">
-                  <button className="start-button" onClick={handleSavePicture}>
-                    Save Picture
-                  </button>
-                  <button className="end-button" onClick={handleRetakePicture}>
+                  <button className="start-button" onClick={handleRetakePicture}>
                     Neues Foto
+                  </button>
+                  <button className="end-button" onClick={handleDeleteLastPhoto}>
+                    Foto verwerfen
                   </button>
                 </div>
               </>
