@@ -54,10 +54,14 @@
 }
 
 .PhotoMode .countdown {
-    font-size: 10rem;
-    color: rgb(183, 0, 255);
-    margin-top: 20px;
-    z-index: 2;
+    position: absolute;
+    top: 50%; /* Vertikale Mitte */
+    left: 50%; /* Horizontale Mitte */
+    transform: translate(-50%, -50%); /* Zentrieren */
+    font-size: 10rem; /* Schriftgröße */
+    color: rgb(183, 0, 255); /* Countdown-Farbe */
+    z-index: 3; /* Sicherstellen, dass es über dem Video angezeigt wird */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Schatten für bessere Sichtbarkeit */
 }
 
 .PhotoMode input[type="range"] {
