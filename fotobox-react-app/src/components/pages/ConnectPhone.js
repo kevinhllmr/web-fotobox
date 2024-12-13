@@ -73,7 +73,7 @@ const ConnectPhone = () => {
                     await handleScan(setAnswer);
                     alert('Successfully read Answer from NFC tag!');
                     if (answer) {
-                        handleSetRemoteDescription();
+                        //handleSetRemoteDescription();
                     }
                 } catch (error) {
                     console.error('Failed to read Answer from NFC:', error);
@@ -87,24 +87,22 @@ const ConnectPhone = () => {
 
     // Mobile: Write the answer JSON to the NFC tag
     const handleWriteAnswerToNFC = () => {
-        if (answer.trim() !== '' ) {
-            if('NDEFReader' in window){
-                handleGenerateAnswer(offer, (generatedAnswer) => {
-                    setAnswer(generatedAnswer);
-                    handleWrite(answer)
-                    .then(() => alert('Successfully wrote JSON to the NFC tag！'))
-                    .catch(error => console.error('写入 NFC 失败:', error));
-                }
-            );
-
+        if (offer.trim() !== '') {
+            if ('NDEFReader' in window) {
+                handleWrite(answer)
+                    .then(() => {
+                        alert('Successfully wrote Offer JSON to the NFC tag!');
+                    })
+                    .catch(error => {
+                        console.error('Failed to write data to NFC tag:', error);
+                        alert(error);
+                        alert('Failed to write data to NFC tag. Please try again.');
+                    });
+            } else {
+                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
             }
-            else{
-                alert("Your device does not support NFC Writer functionality! Or your browser does not support the webnfc function ");
-                return;
-            }
-
         } else {
-            alert('Answer JSON is empty，please input valid content before writing.');
+            alert('Offer JSON is empty, please input valid content before writing.');
         }
     };
 
@@ -136,23 +134,6 @@ const ConnectPhone = () => {
     useEffect(() => {
         if (isMobile && offer) {
             handleGenerateAnswer();
-            const newPeer = createPeer(
-                true,
-                (data) => {
-                    setOffer(JSON.stringify(data));
-                },
-                (data) => {
-                    setMessages(prevMessages => [...prevMessages, { text: data.toString(), sender: 'Remote' }]);
-                },
-                () => {
-                    setDataChannel(newPeer);
-                    setRemoteDescriptionSet(true);
-                },
-                () => {
-                    alert("The other user has left the chat.");
-                }
-            );
-            setPeer(newPeer);
         }
     }, [isMobile, offer]);
     const handleGenerateAnswer = () => {
