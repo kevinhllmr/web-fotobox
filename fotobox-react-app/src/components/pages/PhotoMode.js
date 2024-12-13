@@ -1,3 +1,5 @@
+// PhotoMode.js
+
 import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "./PhotoMode.css";
@@ -110,7 +112,6 @@ function PhotoMode() {
     setPhotoTaken(false); // Zustand zurücksetzen
     setButtonsShown(true); // Zeige die Buttons wieder an
   };
-  
 
   const handleEndSession = async () => {
     console.log("Seite wird verlassen, Kamera wird getrennt.");
@@ -154,9 +155,18 @@ function PhotoMode() {
       />
       <header className="App-header">
         {!cameraActive ? (
-          <button className="start-button" onClick={handleStartApp}>
-            Start
-          </button>
+          <>
+            <button className="start-button" onClick={handleStartApp}>
+              Start
+            </button>
+            <div className="instructions">
+              <ol>
+                <li>Drücke Start</li>
+                <li>Wähle die Kamera aus (die einzige Option) </li>
+                <li>drücke auf Verbinden.</li>
+              </ol>
+            </div>
+          </>
         ) : (
           <>
             {!photoTaken ? (
@@ -165,17 +175,10 @@ function PhotoMode() {
                 {showButtons && (
                   <div className="button-container">
                     <button className="start-button" onClick={startPhotoCountdown}>
-                      Start Countdown
+                      Starte Countdown
                     </button>
-                    <input
-                      type="range"
-                      min="3"
-                      max="10"
-                      value={timerValue}
-                      onChange={(e) => setTimerValue(e.target.value)}
-                    />
                     <button className="end-button" onClick={handleEndSession}>
-                      End Session
+                      Sitzung beenden
                     </button>
                   </div>
                 )}
@@ -183,10 +186,10 @@ function PhotoMode() {
               </>
             ) : (
               <>
-                <img class="camera-preview" src={imageSrc} alt="Captured" />
+                <img className="camera-preview" src={imageSrc} alt="Captured" />
                 <div className="button-container">
                   <button className="start-button" onClick={handleRetakePicture}>
-                    Neues Foto
+                    Foto speichern
                   </button>
                   <button className="end-button" onClick={handleDeleteLastPhoto}>
                     Foto verwerfen

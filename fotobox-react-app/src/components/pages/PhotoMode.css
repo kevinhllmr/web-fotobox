@@ -64,24 +64,6 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Schatten für bessere Sichtbarkeit */
 }
 
-.PhotoMode input[type="range"] {
-    margin: 20px auto 0;
-    width: 40%;
-    z-index: 2;
-}
-
-
-.PhotoMode .footer-text {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
-    color: white;
-    font-size: 2rem;
-    bottom: 5%; /* Abstand vom unteren Rand erhöhen */
-}
-
-
 .PhotoMode .button-container {
     position: fixed;
     display: flex;

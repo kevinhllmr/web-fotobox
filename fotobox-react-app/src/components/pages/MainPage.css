@@ -124,3 +124,64 @@
 .tablet:hover {
     cursor: pointer;
 }
+
+.help-button {
+    background: none;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    position: absolute;
+    top: 50%; /* Mittig von der Flagge */
+    transform: translateY(-50%);
+    right: 15%;
+    border-radius: 10px;
+}
+
+.help-button:hover {
+    background-color: grey;
+}
+
+.help-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: black;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    color: darkgray;
+}
+
+.help-modal h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.help-modal p {
+    margin: 10px 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.close-help {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 10px auto 0;
+    font-size: 1rem;
+}
+
+.close-help:hover {
+    background-color: #a71d2a;
+}

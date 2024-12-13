@@ -1,17 +1,18 @@
-
-import React, { useState, useEffect } from 'react'
-import '../../App.css'
+import React, { useState, useEffect } from 'react';
+import '../../App.css';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '../Button.js'
-import './MainPage.css'
+import { Button } from '../Button.js';
+import './MainPage.css';
 import { lang_de } from '../langs/lang_de.js';
 import { lang_en } from '../langs/lang_en.js';
 
 function MainPage() {
-
     //variables for current location and react routing
     const location = useLocation();
     let navigate = useNavigate();
+
+    //state for help modal
+    const [showHelp, setShowHelp] = useState(false);
   
     //sets language
     useEffect(() => {
@@ -52,7 +53,6 @@ function MainPage() {
 
       document.getElementsByClassName('tablet')[0]
         .addEventListener('click', function (event) {
-          // navigate(`/` + user_id + `/photomode/`);
           navigate(`/photomode/`);
         });
 
@@ -63,11 +63,11 @@ function MainPage() {
 
       document.getElementById('cloud').addEventListener('click', function (event) {
         navigate(`/gallery/`);
-      })
+      });
 
       document.getElementById('settings').addEventListener('click', function (event) {
         navigate(`/admin/`);
-      })
+      });
     }, []);
 
     async function toggleLanguage() {
@@ -88,7 +88,7 @@ function MainPage() {
         document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
       }
     }
-  
+
     return (
       <div className='hero-container'>
         <img id="bg" src={process.env.PUBLIC_URL + '/images/home-bg.png'}/>
@@ -101,6 +101,7 @@ function MainPage() {
             <span className="flags" id="btn_lng">
               <img id='imglng' alt="Language Button"></img>
             </span>
+            <button className="help-button" onClick={() => setShowHelp(!showHelp)}>Help</button>
           </div>
 
           <div className="main-content">
@@ -121,8 +122,25 @@ function MainPage() {
             <p id='settings'>Admin Settings</p>
           </div> 
         </div>
+
+        {showHelp && (
+          <div className="help-modal">
+            <h2>Help</h2>
+            <p><strong>Fotobox benutzen</strong><br/>
+              Drücken Sie auf das Tablet-Symbol, um die Fotobox zu starten.</p>
+            <p><strong>Handy verbinden</strong><br/>
+              Öffnen Sie die Website auf Ihrem Handy (siehe QR-Code): <em>[Website-Adresse einfügen]</em><br/>
+              Drücken Sie auf das NFC-Symbol, um Ihr Handy mit dem Tablet zu verbinden (NFC-Funktion erforderlich).<br/>
+              Folgen Sie den Anweisungen auf Ihrem Gerät.</p>
+            <p><strong>Bilder auf das Handy übertragen</strong> (nur wenn das Handy mit dem Tablet verbunden ist):<br/>
+              Öffnen Sie Cloud Access.<br/>
+              Wählen Sie Ihr gewünschtes Bild aus.<br/>
+              Drücken Sie auf „An Smartphone senden“.</p>
+            <button onClick={() => setShowHelp(false)} className="close-help">Close</button>
+          </div>
+        )}
       </div>
-    )
-  }
-  
-  export default MainPage
+    );
+}
+
+export default MainPage;
