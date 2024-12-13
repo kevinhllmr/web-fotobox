@@ -133,6 +133,28 @@ const ConnectPhone = () => {
         }
     }, [isMobile]);
 
+    useEffect(() => {
+        if (isMobile && offer) {
+            handleGenerateAnswer();
+            const newPeer = createPeer(
+                true,
+                (data) => {
+                    setOffer(JSON.stringify(data));
+                },
+                (data) => {
+                    setMessages(prevMessages => [...prevMessages, { text: data.toString(), sender: 'Remote' }]);
+                },
+                () => {
+                    setDataChannel(newPeer);
+                    setRemoteDescriptionSet(true);
+                },
+                () => {
+                    alert("The other user has left the chat.");
+                }
+            );
+            setPeer(newPeer);
+        }
+    }, [isMobile, offer]);
     const handleGenerateAnswer = () => {
         if (offer) {
             const newPeer = createAnswer(
