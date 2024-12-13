@@ -23,17 +23,29 @@ function openDatabase() {
   });
 }
 
+
 // Bild in IndexedDB speichern
-export async function saveImageToIndexedDB(imageSrc) {
+export async function saveImageToIndexedDB(file) {
   try {
     const db = await openDatabase();
     const transaction = db.transaction('photos', 'readwrite');
     const store = transaction.objectStore('photos');
+
+    // Sicherstellen, dass der Input ein Blob ist
+    let fileBlob;
+    if (file instanceof File || file instanceof Blob) {
+      fileBlob = file;
+    } else {
+      throw new Error("Die Datei muss ein Blob oder ein File sein.");
+    }
+
+    // Aktuelles Datum und Uhrzeit für den Dateinamen
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
-    const fileName = `${formattedDate}.png`;
+    const fileName = `${formattedDate}.jpg`;
 
-    store.add({ name: fileName, data: imageSrc });
+    // Daten speichern
+    store.add({ name: fileName, data: fileBlob });
 
     transaction.oncomplete = () => {
       console.log('Bild erfolgreich in IndexedDB gespeichert: ' + fileName);
@@ -47,7 +59,7 @@ export async function saveImageToIndexedDB(imageSrc) {
   }
 }
 
-// Alle Bilder aus IndexedDB abrufen
+// Alle Bilder aus IndexedDB abrufen und in URL umwandeln
 export async function getAllImagesFromIndexedDB() {
   try {
     const db = await openDatabase();
@@ -58,7 +70,15 @@ export async function getAllImagesFromIndexedDB() {
       const request = store.getAll();
 
       request.onsuccess = (event) => {
-        resolve(event.target.result);
+        const images = event.target.result;
+
+        // Blob in eine URL umwandeln
+        const formattedImages = images.map(image => ({
+          ...image,
+          data: URL.createObjectURL(image.data)
+        }));
+
+        resolve(formattedImages);
       };
 
       request.onerror = (event) => {
@@ -70,6 +90,52 @@ export async function getAllImagesFromIndexedDB() {
     return [];
   }
 }
+
+
+
+// Funktion zum Löschen des letzten Fotos in der IndexedDB
+export async function deleteLastImageFromIndexedDB() {
+  try {
+    const db = await openDatabase();
+    const transaction = db.transaction('photos', 'readwrite');
+    const store = transaction.objectStore('photos');
+
+    const request = store.getAll();
+
+    request.onsuccess = (event) => {
+      const images = event.target.result;
+
+      if (images.length > 0) {
+        const lastImageId = images[images.length - 1].id; // ID des letzten Bildes
+        const deleteRequest = store.delete(lastImageId);
+
+        deleteRequest.onsuccess = () => {
+          console.log('Letztes Foto erfolgreich gelöscht.');
+        };
+
+        deleteRequest.onerror = (deleteEvent) => {
+          console.error(
+            'Fehler beim Löschen des letzten Fotos:',
+            deleteEvent.target.error
+          );
+        };
+      } else {
+        console.warn('Keine Bilder zum Löschen vorhanden.');
+      }
+    };
+
+    request.onerror = (event) => {
+      console.error(
+        'Fehler beim Abrufen der Bilder aus IndexedDB:',
+        event.target.errorCode
+      );
+    };
+  } catch (error) {
+    console.error('Fehler beim Löschen des letzten Fotos aus IndexedDB:', error);
+  }
+}
+
+
 
 // Funktion zum Löschen aller Daten aus IndexedDB
 export async function deleteDataFromIndexedDB() {
