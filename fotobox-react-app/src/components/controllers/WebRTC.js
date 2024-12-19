@@ -108,7 +108,7 @@ class WebRTC {
     }
 
     sendInChunks(data) {
-        const chunkSize = 16384; // Size of each chunk
+        const chunkSize = 16384;
         let offset = 0;
 
         while (offset < data.length) {
