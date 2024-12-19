@@ -73,7 +73,7 @@ const ConnectPhone = () => {
                     await handleScan(setAnswer);
                     alert('Successfully read Answer from NFC tag!');
                     if (answer) {
-                        //handleSetRemoteDescription();
+                        handleSetRemoteDescription();
                     }
                 } catch (error) {
                     console.error('Failed to read Answer from NFC:', error);
@@ -91,7 +91,7 @@ const ConnectPhone = () => {
             if ('NDEFReader' in window) {
                 handleWrite(answer)
                     .then(() => {
-                        alert('Successfully wrote Offer JSON to the NFC tag!');
+                        alert('Successfully wrote Answer JSON to the NFC tag!');
                     })
                     .catch(error => {
                         console.error('Failed to write data to NFC tag:', error);
