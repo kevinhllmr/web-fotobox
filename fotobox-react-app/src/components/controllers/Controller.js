@@ -1,5 +1,6 @@
 import Peripherie from "./Peripherie";  // Import der Peripherie-Daten
 import { Camera } from '../build/camera';
+import WebRTC from './WebRTC'; 
 
 // IndexedDB öffnen oder erstellen
 function openDatabase() {
@@ -281,7 +282,41 @@ export async function getCameraAccess(device, videoRef, setVideoStreamActive) {
   }
 }
 
+export function handleSavePhotoRequest(videoRef, canvasRef) {
+  if (WebRTC.dataChannel) {
+      if (videoRef.current) {
+          // Capture the image
+          const videoWidth = videoRef.current.videoWidth;
+          const videoHeight = videoRef.current.videoHeight;
+          const canvas = canvasRef.current;
+          canvas.width = videoWidth;
+          canvas.height = videoHeight;
+          const context = canvas.getContext('2d');
+          context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+          const imageData = canvas.toDataURL('image/png'); // Capture the image in base64
 
+          // Ensure we have image data before sending
+          if (imageData) {
+              console.log('Sending photo data:', imageData);
+              WebRTC.sendPhoto(imageData); // Send the captured photo over WebRTC
+          } else {
+              console.log('No image data captured');
+          }
+      } else {
+          console.log('Video element is not ready');
+      }
+  } else {
+      console.log('Data channel is not ready');
+  }
+}
+
+// WebRTC onData handler to listen for commands from the phone
+WebRTC.onData((message) => {
+  const parsedMessage = JSON.parse(message);
+  if (parsedMessage.type === 'savePhoto') {
+      handleSavePhotoRequest(videoRef, canvasRef); // Trigger the photo capture and send process
+  }
+});
 
 
 

@@ -53,39 +53,44 @@ function MainPage() {
 
       document.getElementsByClassName('tablet')[0]
         .addEventListener('click', function (event) {
+          localStorage.setItem("deviceUsed", "tablet");
           navigate(`/photomode/`);
         });
 
       document.getElementsByClassName('phone')[0]
         .addEventListener('click', function (event) {
-          navigate(`/connectphone/`);
+          localStorage.setItem("deviceUsed", "phone");
+          // navigate(`/connectphone/`);
+          navigate(`/connect/`);
         });
 
       document.getElementById('cloud').addEventListener('click', function (event) {
         navigate(`/gallery/`);
       });
 
-      document.getElementById('settings').addEventListener('click', function (event) {
-        navigate(`/admin/`);
-      });
+      // document.getElementById('settings').addEventListener('click', function (event) {
+      //   navigate(`/admin/`);
+      // });
     }, []);
 
     async function toggleLanguage() {
-      if (localStorage.getItem("lang") === "de") {
-        lang_en();
-        localStorage.setItem("lang", "en");
-        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
-        document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
-  
-      } else {
-        lang_de();
-        localStorage.setItem("lang", "de");
-        document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
-        document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+      if(document.getElementById("btn_lng") && document.getElementById("imglng")) {
+        if (localStorage.getItem("lang") === "de") {
+          lang_en();
+          localStorage.setItem("lang", "en");
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+          document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+    
+        } else {
+          lang_de();
+          localStorage.setItem("lang", "de");
+          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+          document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+        }
       }
     }
 
@@ -101,7 +106,7 @@ function MainPage() {
             <span className="flags" id="btn_lng">
               <img id='imglng' alt="Language Button"></img>
             </span>
-            <button className="help-button" onClick={() => setShowHelp(!showHelp)}>Help</button>
+            <button id='help' className="help-button" onClick={() => setShowHelp(!showHelp)}>Help</button>
           </div>
 
           <div className="main-content">
@@ -118,25 +123,25 @@ function MainPage() {
           <p id='or'>or</p>
 
           <div className="footer">
-            <p id='cloud'>Cloud Access</p>
-            <p id='settings'>Admin Settings</p>
+            <p id='cloud'>Gallery</p>
+            {/* <p id='settings'>Admin Settings</p> */}
           </div> 
         </div>
 
         {showHelp && (
           <div className="help-modal">
             <h2>Help</h2>
-            <p><strong>Fotobox benutzen</strong><br/>
+            <p id='help1'><strong>Fotobox benutzen</strong><br/>
               Drücken Sie auf das Tablet-Symbol, um die Fotobox zu starten.</p>
-            <p><strong>Handy verbinden</strong><br/>
-              Öffnen Sie die Website auf Ihrem Handy (siehe QR-Code): <em>[Website-Adresse einfügen]</em><br/>
+            <p id='help2'><strong>Handy verbinden</strong><br/>
+              Öffnen Sie die Website auf Ihrem Handy (siehe QR-Code)<br/>
               Drücken Sie auf das NFC-Symbol, um Ihr Handy mit dem Tablet zu verbinden (NFC-Funktion erforderlich).<br/>
               Folgen Sie den Anweisungen auf Ihrem Gerät.</p>
-            <p><strong>Bilder auf das Handy übertragen</strong> (nur wenn das Handy mit dem Tablet verbunden ist):<br/>
-              Öffnen Sie Cloud Access.<br/>
+            <p id='help3'><strong>Bilder auf das Handy übertragen</strong> (nur wenn das Handy mit dem Tablet verbunden ist):<br/>
+              Öffnen Sie die Gallerie.<br/>
               Wählen Sie Ihr gewünschtes Bild aus.<br/>
               Drücken Sie auf „An Smartphone senden“.</p>
-            <button onClick={() => setShowHelp(false)} className="close-help">Close</button>
+            <button onClick={() => setShowHelp(false)} id='close' className="close-help">Close</button>
           </div>
         )}
       </div>

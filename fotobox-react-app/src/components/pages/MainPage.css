@@ -135,7 +135,7 @@
     position: absolute;
     top: 50%; /* Mittig von der Flagge */
     transform: translateY(-50%);
-    right: 15%;
+    right: 17%;
     border-radius: 10px;
 }
 

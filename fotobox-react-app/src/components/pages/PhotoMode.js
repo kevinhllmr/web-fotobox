@@ -1,18 +1,19 @@
-// PhotoMode.js
-
 import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "./PhotoMode.css";
 import { saveImageToIndexedDB, deleteLastImageFromIndexedDB, startCountdown } from "../controllers/Controller.js";
 import { useNavigate } from "react-router-dom";
 import { Camera } from "../build/camera.js"; // Importiere die Camera-Klasse von web-gphoto2
+import WebRTC from '../controllers/WebRTC';
 
 function PhotoMode() {
   const navigate = useNavigate();
   const [camera, setCamera] = useState(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [device, setDevice] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
+  const [webrtcConnected, setWebrtcConnected] = useState(false);
   const [showButtons, setButtonsShown] = useState(false);
   const [timerValue, setTimerValue] = useState(3);
   const [countdown, setCountdown] = useState(0);
@@ -26,6 +27,31 @@ function PhotoMode() {
     };
 
     window.addEventListener("beforeunload", handleUnload);
+
+    const deviceUsed = localStorage.getItem('deviceUsed');
+    if (deviceUsed === 'phone') {
+      setButtonsShown(false);
+    }
+
+    const checkWebRTCConnection = () => {
+      if (WebRTC.dataChannel && WebRTC.dataChannel.readyState === 'open') {
+        setButtonsShown(false);
+      } else {
+        setButtonsShown(true);
+      }
+    };
+
+    checkWebRTCConnection();
+
+    const peer = WebRTC.peer;
+    if (peer) {
+      peer.on('data', (data) => {
+        handleIncomingData(data);
+      });
+    }
+
+    WebRTC.onData(handleIncomingData);
+
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
@@ -98,11 +124,34 @@ function PhotoMode() {
     initializeCamera();
   };
 
+  const handleIncomingData = (data) => {
+    const message = JSON.parse(data);
+    switch (message.type) {
+      case 'startCountdown':
+        startPhotoCountdown();
+        break;
+      case 'savePhoto':
+        handleSavePicture();
+        break;
+      case 'retryPhoto':
+        handleRetakePicture();
+        break;
+      case 'photoData':
+        handleReceivedPhotoData(message.data);
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleRetakePicture = () => {
-    console.log("Retaking picture...");
     setImageSrc(null);
     setPhotoTaken(false);
+    setCameraActive(false);
     setButtonsShown(true);
+    setTimeout(() => {
+      setCameraActive(true);
+    }, 1);
   };
 
   const handleDeleteLastPhoto = async () => {
@@ -138,12 +187,60 @@ function PhotoMode() {
       saveImageToIndexedDB(file);
       const imgURL = URL.createObjectURL(file);
       setImageSrc(imgURL);
-      
+
       setBlobURL(null);
       setPhotoTaken(true);
     } catch (error) {
       console.error("Fehler beim Aufnehmen des Bildes:", error);
     }
+  };
+
+  const CHUNK_SIZE = 16000; // 16kB per chunk
+
+  const sendPhotoData = (photoDataUrl) => {
+    if (WebRTC.dataChannel && WebRTC.dataChannel.readyState === 'open') {
+      const chunks = splitIntoChunks(photoDataUrl, CHUNK_SIZE);
+
+      chunks.forEach((chunk, index) => {
+        const message = JSON.stringify({
+          type: 'photoData',
+          data: chunk,
+          index,
+          totalChunks: chunks.length
+        });
+
+        console.log(`Sending chunk ${index + 1}/${chunks.length}:`, message);
+        WebRTC.sendMessage(message);
+      });
+    } else {
+      console.log('Data channel is not open. Unable to send photo data.');
+    }
+  };
+
+  const splitIntoChunks = (data, chunkSize) => {
+    const chunks = [];
+    for (let i = 0; i < data.length; i += chunkSize) {
+      chunks.push(data.substring(i, i + chunkSize));
+    }
+    return chunks;
+  };
+
+
+  const handleSavePicture = () => {
+    if (Peripherie.cloudAccess) {
+      uploadImageToCloud(imageSrc);
+    } else {
+      downloadImage(imageSrc);
+    }
+  };
+
+  const handleReceivedPhotoData = (photoData) => {
+    const link = document.createElement('a');
+    link.href = photoData;
+    link.download = 'photo.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
