@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import WebRTC from '../controllers/WebRTC';
 import './Connect.css';
+import { handleScan, handleWrite } from '../controllers/WebNFC';
 import { lang_de } from '../langs/lang_de.js';
 import { lang_en } from '../langs/lang_en.js';
+import pako from "pako";
 
 const Connect = () => {
     const [width, setWidth] = useState(window.innerWidth);
@@ -79,22 +81,26 @@ const Connect = () => {
         setIsButtonDisabled(true);
 
         if (step == 1) {
+            console.log("Handle Write Offer");
             handleWriteOffer();
             setStep(step + 1);
             setLoadingPercentage(25);
         }
 
         if (step == 2) {
+            console.log("Mobile: Handle Read Offer");
             setStep(step + 1);
             setLoadingPercentage(50);
         }
 
         if (step == 3) {
+            console.log("Mobile: Handle Write Answer");
             setStep(step + 1);
             setLoadingPercentage(75);
         }
 
         if (step === 4) {
+            console.log("Handle Read Answer");
             handleReadAnswerFromNFC();
             setTimeout(() => {
                 handleSetRemoteDescription();
@@ -109,15 +115,17 @@ const Connect = () => {
     const handleWriteOffer = async () => {
         if (offer.trim() !== '') {
             if ('NDEFReader' in window) {
-                try {
-                    await handleWrite(offer);
-                    alert('Successfully wrote Offer JSON to the NFC tag!');
-                } catch (error) {
-                    console.error('Failed to write data to NFC tag:', error);
-                    alert('Failed to write data to NFC tag. Please try again.');
-                }
+                handleWrite(offer)
+                    .then(() => {
+                        alert('Successfully wrote Offer JSON to the NFC tag!');
+                    })
+                    .catch(error => {
+                        console.error('Failed to write data to NFC tag:', error);
+                        alert(error);
+                        alert('Failed to write data to NFC tag. Please try again.');
+                    });
             } else {
-                alert("Your device does not support NFC functionality or your browser does not support Web NFC.");
+                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
             }
         } else {
             alert('Offer JSON is empty, please input valid content before writing.');
@@ -126,28 +134,28 @@ const Connect = () => {
 
     const handleReadOffer = async () => {
         if ('NDEFReader' in window) {
-            try {
-                await handleScan(setOffer);
-            } catch (error) {
-                console.error('Failed to read Offer from NFC:', error);
-            }
-        } else {
+            await handleScan(setOffer);
+        }
+        else {
             alert("NFC read failed. Please try again or use a device with NFC support.");
+            return;
         }
     };
 
-    const handleWriteAnswerFromNFC = async () => {
+    const handleWriteAnswerToNFC = async () => {
         if (offer.trim() !== '') {
             if ('NDEFReader' in window) {
-                try {
-                    await handleWrite(answer);
-                    alert('Successfully wrote Answer JSON to the NFC tag!');
-                } catch (error) {
-                    console.error('Failed to write data to NFC tag:', error);
-                    alert('Failed to write data to NFC tag. Please try again.');
-                }
+                handleWrite(answer)
+                    .then(() => {
+                        alert('Successfully wrote Answer JSON to the NFC tag!');
+                    })
+                    .catch(error => {
+                        console.error('Failed to write data to NFC tag:', error);
+                        alert(error);
+                        alert('Failed to write data to NFC tag. Please try again.');
+                    });
             } else {
-                alert("Your device does not support NFC functionality or your browser does not support Web NFC.");
+                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
             }
         } else {
             alert('Offer JSON is empty, please input valid content before writing.');
@@ -196,6 +204,18 @@ const Connect = () => {
         }
     };
 
+    const testCompression = () => {
+        const jsonString = JSON.stringify({ key: "value" });
+        const compressed = pako.gzip(jsonString);
+        const decompressed = pako.ungzip(compressed, { to: "string" });
+    
+        console.log("Original:", jsonString);
+        console.log("Compressed:", compressed);
+        console.log("Decompressed:", decompressed);
+        };
+    
+        testCompression();
+
     return (
         <div className={isMobile ? "mobile" : "desktop"}>
             <img id="bg" src={process.env.PUBLIC_URL + '/images/home-bg.png'} alt="Background" />
@@ -226,7 +246,7 @@ const Connect = () => {
             {isMobile && (
                 <div className="button-container">
                     <button onClick={handleReadOffer}>Read Offer</button>
-                    <button onClick={handleWriteAnswerFromNFC}>Write Answer</button>
+                    <button onClick={handleWriteAnswerToNFC}>Write Answer</button>
                 </div>
             )}
 
@@ -291,7 +311,7 @@ const Connect = () => {
                         3) Now hold it against your phone and press on "Read Offer"
                     </h2>
                     <h2 id="step3" style={{ display: step === 3 ? 'block' : 'none' }}>
-                        4) Now press "Write Answer" on your phone while holding the NFC against it
+                        4) Now press "Write Answer" on your phone while holding the NFC tag against it
                     </h2>
                     <h2 id="step4" style={{ display: step === 4 ? 'block' : 'none' }}>
                         5) Finally, hold the tag here and press "Finish" to read the answer
