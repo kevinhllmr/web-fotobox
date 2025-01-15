@@ -41,7 +41,7 @@ const Connect = () => {
                     setRemoteDescriptionSet(true);
                 },
                 () => {
-                    alert("The other user has left the chat.");
+                    console.log("The other user has left the chat.");
                 }
             );
             setPeer(newPeer);
@@ -122,18 +122,18 @@ const Connect = () => {
             if ('NDEFReader' in window) {
                 handleWrite(offer)
                     .then(() => {
-                        alert('Successfully wrote Offer JSON to the NFC tag!');
+                        console.log('Successfully wrote Offer JSON to the NFC tag!');
                     })
                     .catch(error => {
                         console.error('Failed to write data to NFC tag:', error);
-                        alert(error);
-                        alert('Failed to write data to NFC tag. Please try again.');
+                        console.log(error);
+                        console.log('Failed to write data to NFC tag. Please try again.');
                     });
             } else {
-                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
+                console.log("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
             }
         } else {
-            alert('Offer JSON is empty, please input valid content before writing.');
+            console.log('Offer JSON is empty, please input valid content before writing.');
         }
     };
 
@@ -142,7 +142,7 @@ const Connect = () => {
             await handleScan(setOffer);
         }
         else {
-            alert("NFC read failed. Please try again or use a device with NFC support.");
+            console.log("NFC read failed. Please try again or use a device with NFC support.");
             return;
         }
     };
@@ -152,18 +152,18 @@ const Connect = () => {
             if ('NDEFReader' in window) {
                 handleWrite(answer)
                     .then(() => {
-                        alert('Successfully wrote Answer JSON to the NFC tag!');
+                        console.log('Successfully wrote Answer JSON to the NFC tag!');
                     })
                     .catch(error => {
                         console.error('Failed to write data to NFC tag:', error);
-                        alert(error);
-                        alert('Failed to write data to NFC tag. Please try again.');
+                        console.log(error);
+                        console.log('Failed to write data to NFC tag. Please try again.');
                     });
             } else {
-                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
+                console.log("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
             }
         } else {
-            alert('Offer JSON is empty, please input valid content before writing.');
+            console.log('Offer JSON is empty, please input valid content before writing.');
         }
     };
 
@@ -171,12 +171,12 @@ const Connect = () => {
         if ('NDEFReader' in window) {
             try {
                 await handleScan(setAnswer);
-                alert('Successfully read Answer from NFC tag!');
+                console.log('Successfully read Answer from NFC tag!');
             } catch (error) {
                 console.error('Failed to read Answer from NFC:', error);
             }
         } else {
-            alert("NFC read failed. Please try again or use a device with NFC support.");
+            console.log("NFC read failed. Please try again or use a device with NFC support.");
         }
     };
 
@@ -189,23 +189,15 @@ const Connect = () => {
 
     const handleGenerateAnswer = () => {
         if (offer) {
-            const newPeer = WebRTC.createAnswer(
+            WebRTC.createAnswer(
                 offer,
-                (data) => {
-                    setAnswer(data);
-                },
-                (data) => {
-                    setMessages(prevMessages => [...prevMessages, { text: data.toString(), sender: 'Remote' }]);
-                },
-                () => {
-                    setDataChannel(newPeer);
-                },
-                () => {
-                    alert("The other user has left the chat.");
-                }
+                (data) => setAnswer(data),
+                (data) => setMessages(prevMessages => [...prevMessages, { text: data.toString(), sender: 'Remote' }]),
+                () => navigate('/remote'),
+                () => console.log("The other user has left the chat.")
             );
-            setPeer(newPeer);
         } else {
+            console.log('No offer available. Please make sure the offer is generated.');
         }
     };
 
