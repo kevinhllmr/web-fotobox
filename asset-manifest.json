@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/web-fotobox/static/css/main.04136785.css",
-    "main.js": "/web-fotobox/static/js/main.a66506d7.js",
+    "main.js": "/web-fotobox/static/js/main.a356be48.js",
     "static/js/811.ac079978.chunk.js": "/web-fotobox/static/js/811.ac079978.chunk.js",
     "static/media/libapi.wasm": "/web-fotobox/static/media/libapi.c980861b9ce1a2b2ea33.wasm",
     "index.html": "/web-fotobox/index.html",
     "main.04136785.css.map": "/web-fotobox/static/css/main.04136785.css.map",
-    "main.a66506d7.js.map": "/web-fotobox/static/js/main.a66506d7.js.map",
+    "main.a356be48.js.map": "/web-fotobox/static/js/main.a356be48.js.map",
     "811.ac079978.chunk.js.map": "/web-fotobox/static/js/811.ac079978.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.04136785.css",
-    "static/js/main.a66506d7.js"
+    "static/js/main.a356be48.js"
   ]
 }
