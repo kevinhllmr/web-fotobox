@@ -47,13 +47,20 @@ const Connect = () => {
             setPeer(newPeer);
 
         }
-
         // handleWriteOffer();
         const handleWindowSizeChange = () => setWidth(window.innerWidth);
         window.addEventListener('resize', handleWindowSizeChange);
         return () => window.removeEventListener('resize', handleWindowSizeChange);
 
     }, [isMobile]);
+
+    useEffect(() =>{
+        // when the offertextarea is filled, generate the answer json
+        if (isMobile && offer) {
+            handleGenerateAnswer();
+            console.log(answer);
+        }
+    },[isMobile, offer]);
 
     const handleClick = () => {
         setShowContent(false);
@@ -133,9 +140,6 @@ const Connect = () => {
     const handleReadOffer = async () => {
         if ('NDEFReader' in window) {
             await handleScan(setOffer);
-            if (isMobile && offer) {
-                handleGenerateAnswer();
-            }
         }
         else {
             alert("NFC read failed. Please try again or use a device with NFC support.");
