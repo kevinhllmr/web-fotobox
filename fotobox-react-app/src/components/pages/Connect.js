@@ -46,8 +46,6 @@ const Connect = () => {
             );
             setPeer(newPeer);
 
-        } else if (isMobile && offer) {
-            handleGenerateAnswer();
         }
 
         // handleWriteOffer();
@@ -135,6 +133,9 @@ const Connect = () => {
     const handleReadOffer = async () => {
         if ('NDEFReader' in window) {
             await handleScan(setOffer);
+            if (isMobile && offer) {
+                handleGenerateAnswer();
+            }
         }
         else {
             alert("NFC read failed. Please try again or use a device with NFC support.");
