@@ -15,25 +15,14 @@ Eine moderne Fotobox-Anwendung basierend auf React, die für Events, Partys und 
 ## Voraussetzungen
 
 - Node.js (Version 16 oder höher)
+- Chrome Webbrowser
 - Eine Kamera, die mit der gphoto2-Bibliothek kompatibel ist (optional für echte Kameraunterstützung)
+     für die Externe Kamera benötigt man Android oder Linux 
+
+
 
 ## Nutzung
-
-1. **Entwicklungsserver starten:**
-
-   Mit npm:
-   ```bash
-   npm start
-   ```
-
-   Oder mit Yarn:
-   ```bash
-   yarn start
-   ```
-
-   Die Anwendung ist unter `http://localhost:3000` verfügbar.
-
-2. **Produktion bereitstellen:**
+**Produktion bereitstellen:**
 
    Erstelle eine Produktionsversion der Anwendung:
 
@@ -42,7 +31,7 @@ Eine moderne Fotobox-Anwendung basierend auf React, die für Events, Partys und 
    or
    ($env:HTTPS = "true") -and (npm start)
    ```
-
+   Die Anwendung ist unter `https://localhost:3000` verfügbar.
 ## Verzeichnisstruktur
 
 - `src/`
