@@ -327,6 +327,9 @@ function PhotoMode() {
                   <li>Drücke auf Verbinden.</li>
                 </ol>
               </div>
+              <div className="footer">
+                <p id="back-button" onClick={handleEndSession}>zurück</p>
+              </div>
             </>
           ) : (
             <>
