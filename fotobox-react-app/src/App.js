@@ -24,7 +24,7 @@ const App = () => {
           {/* <Route path='/connectphone/' element={<ConnectPhone />} /> */}
           <Route path='/connect/' element={<Connect />} />
           <Route path='/remote/' element={<RemoteControl />} />
-          <Route path='/cloud/' element={<CloudAccess />} />
+          <Route path='/gallery/' element={<CloudAccess />} />
           <Route 
             path='/admin/' 
             element={<AdminSettings setIsAuthenticated={setIsAuthenticated} />} 
