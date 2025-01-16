@@ -27,8 +27,12 @@ Eine moderne Fotobox-Anwendung basierend auf React, die für Events, Partys und 
    Erstelle eine Produktionsversion der Anwendung:
 
    ```bash
+   cd .\fotobox-react-app\
    npm run build
-   or
+   ```
+   oder
+   ```bash
+   cd .\fotobox-react-app\
    ($env:HTTPS = "true") -and (npm start)
    ```
    Die Anwendung ist unter `https://localhost:3000` verfügbar.
