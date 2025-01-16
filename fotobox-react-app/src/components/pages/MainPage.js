@@ -3,6 +3,7 @@ import '../../App.css';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../Button.js';
 import './MainPage.css';
+import Peripherie from '../controllers/Peripherie.js';
 import { lang_de } from '../langs/lang_de.js';
 import { lang_en } from '../langs/lang_en.js';
 
@@ -13,86 +14,90 @@ function MainPage() {
 
     //state for help modal
     const [showHelp, setShowHelp] = useState(false);
+
+    //state for external camera toggle
+    const [hasExternCamera, setHasExternCamera] = useState(Peripherie.hasExternCamera);
   
     //sets language
     useEffect(() => {
-      if (location.pathname !== "/home/") {
-        navigate(`/home/`);
-      }
-  
-      let userLang = navigator.language || navigator.userLanguage;
-  
-      if (document.getElementById("imglng") !== null) {
-        if (localStorage.getItem("lang") === "de") {
-          lang_de();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
-  
-        } else if (localStorage.getItem("lang") === "en") {
-          lang_en();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
-  
-        } else if (userLang === "de") {
-          lang_de();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
-          localStorage.setItem("lang", "de");
-  
-        } else {
-          lang_en();
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
-          localStorage.setItem("lang", "en");
+        if (location.pathname !== "/home/") {
+            navigate(`/home/`);
         }
-      }
-
-      //switch language
-      document.getElementById("btn_lng").addEventListener("click", toggleLanguage);
-      document.getElementById("btn_lng").addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          toggleLanguage();
+  
+        let userLang = navigator.language || navigator.userLanguage;
+  
+        if (document.getElementById("imglng") !== null) {
+            if (localStorage.getItem("lang") === "de") {
+                lang_de();
+                document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+  
+            } else if (localStorage.getItem("lang") === "en") {
+                lang_en();
+                document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+  
+            } else if (userLang === "de") {
+                lang_de();
+                document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+                localStorage.setItem("lang", "de");
+  
+            } else {
+                lang_en();
+                document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+                localStorage.setItem("lang", "en");
+            }
         }
-      });
 
-      document.getElementsByClassName('tablet')[0]
-        .addEventListener('click', function (event) {
-          localStorage.setItem("deviceUsed", "tablet");
-          navigate(`/photomode/`);
+        //switch language
+        document.getElementById("btn_lng").addEventListener("click", toggleLanguage);
+        document.getElementById("btn_lng").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                toggleLanguage();
+            }
         });
 
-      document.getElementsByClassName('phone')[0]
-        .addEventListener('click', function (event) {
-          localStorage.setItem("deviceUsed", "phone");
-          // navigate(`/connectphone/`);
-          navigate(`/connect/`);
+        document.getElementsByClassName('tablet')[0]
+            .addEventListener('click', function (event) {
+                localStorage.setItem("deviceUsed", "tablet");
+                navigate(`/photomode/`);
+            });
+
+        document.getElementsByClassName('phone')[0]
+            .addEventListener('click', function (event) {
+                localStorage.setItem("deviceUsed", "phone");
+                navigate(`/connect/`);
+            });
+
+        document.getElementById('cloud').addEventListener('click', function (event) {
+            navigate(`/gallery/`);
         });
-
-      document.getElementById('cloud').addEventListener('click', function (event) {
-        navigate(`/gallery/`);
-      });
-
-      // document.getElementById('settings').addEventListener('click', function (event) {
-      //   navigate(`/admin/`);
-      // });
     }, []);
 
     async function toggleLanguage() {
-      if(document.getElementById("btn_lng") && document.getElementById("imglng")) {
-        if (localStorage.getItem("lang") === "de") {
-          lang_en();
-          localStorage.setItem("lang", "en");
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
-          document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
-    
-        } else {
-          lang_de();
-          localStorage.setItem("lang", "de");
-          document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
-          document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+        if(document.getElementById("btn_lng") && document.getElementById("imglng")) {
+            if (localStorage.getItem("lang") === "de") {
+                lang_en();
+                localStorage.setItem("lang", "en");
+                document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/de.svg';
+                document.getElementById("btn_lng").setAttribute("aria-label", "site now in english");
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+                document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+      
+            } else {
+                lang_de();
+                localStorage.setItem("lang", "de");
+                document.getElementById("imglng").src = process.env.PUBLIC_URL + '/images/gb.svg';
+                document.getElementById("btn_lng").setAttribute("aria-label", "site now in german");
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+                document.getElementById("btn_lng").setAttribute("aria-label", "switch language");
+            }
         }
-      }
     }
+
+    const toggleCamera = () => {
+        const newValue = !hasExternCamera;
+        setHasExternCamera(newValue);
+        Peripherie.hasExternCamera = newValue;
+    };
 
     return (
       <div className='hero-container'>
@@ -124,7 +129,15 @@ function MainPage() {
 
           <div className="footer">
             <p id='cloud'>Gallery</p>
-            {/* <p id='settings'>Admin Settings</p> */}
+
+            {/* Switch for external camera */}
+            <div id='camera-switch-btn'>
+              <label className='switch'>
+                <input type='checkbox' checked={hasExternCamera} onChange={toggleCamera} />
+                <span className='slider'></span>
+              </label>
+              <p>{`External Camera: ${hasExternCamera ? 'Enabled' : 'Disabled'}`}</p>
+            </div>
           </div> 
         </div>
 

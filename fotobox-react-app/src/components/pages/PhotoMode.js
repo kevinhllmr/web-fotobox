@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../../App.css";
 import "./PhotoMode.css";
-import { saveImageToIndexedDB, deleteLastImageFromIndexedDB, startCountdown } from "../controllers/Controller.js";
+import { saveImageToIndexedDB, deleteLastImageFromIndexedDB, startCountdown , takePicture } from "../controllers/Controller.js";
 import { useNavigate } from "react-router-dom";
 import { Camera } from "../build/camera.js"; // Importiere die Camera-Klasse von web-gphoto2
 import WebRTC from '../controllers/WebRTC';
+import Peripherie from '../controllers/Peripherie.js';
 
 function PhotoMode() {
   const navigate = useNavigate();
@@ -19,6 +20,9 @@ function PhotoMode() {
   const [countdown, setCountdown] = useState(0);
   const [blobURL, setBlobURL] = useState(null);
   const [streamIntervalId, setStreamIntervalId] = useState(null); // Intervall-ID für den Stream
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
 
   useEffect(() => {
     const handleUnload = async () => {
@@ -53,8 +57,33 @@ function PhotoMode() {
     WebRTC.onData(handleIncomingData);
 
 
+    const initializeInternalCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    
+        if (videoRef.current) {
+          videoRef.current.pause(); // Stoppe das aktuelle Video, falls es läuft
+          videoRef.current.srcObject = null; // Entferne die aktuelle Quelle
+        }
+    
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play(); // Starte das Video
+        setCameraActive(true);
+      } catch (error) {
+        console.error("Fehler beim Zugriff auf die Kamera:", error);
+      }
+    };
+
+    if (!Peripherie.hasExternCamera) {
+      initializeInternalCamera();
+    }
+
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      }
     };
   }, [camera, streamIntervalId]);
 
@@ -175,6 +204,12 @@ function PhotoMode() {
     startCountdown(timerValue, setCountdown, capturePicture);
   };
 
+  const handleStartCountdown = () => {
+    startCountdown(3, setCountdown, () => {
+      takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken);
+    });
+  };
+
   const capturePicture = async () => {
     if (!camera) {
       console.error("Kamera ist nicht verbunden.");
@@ -234,6 +269,34 @@ function PhotoMode() {
     }
   };
 
+  const handleSavePhoto = async () => {
+    if (imageSrc) {
+      const blob = await fetch(imageSrc).then((res) => res.blob());
+      saveImageToIndexedDB(blob);
+      handleRetakeIntern();
+    }
+  };
+
+  const handleRetakeIntern=async () => {
+    setImageSrc(null);
+    setPhotoTaken(false);
+    setButtonsShown(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  
+      if (videoRef.current) {
+        videoRef.current.pause(); // Stoppe das aktuelle Video, falls es läuft
+        videoRef.current.srcObject = null; // Entferne die aktuelle Quelle
+      }
+  
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play(); // Starte das Video
+      setCameraActive(true);
+    } catch (error) {
+      console.error("Fehler beim Zugriff auf die Kamera:", error);
+    }
+  }
+
   const handleReceivedPhotoData = (photoData) => {
     const link = document.createElement('a');
     link.href = photoData;
@@ -251,44 +314,81 @@ function PhotoMode() {
         alt="Background"
       />
       <header className="App-header">
-        {!cameraActive ? (
-          <>
-            <button className="start-button" onClick={handleStartApp}>
-              Start
-            </button>
-            <div className="instructions">
-              <ol>
-                <li>Drücke Start</li>
-                <li>Wähle die Kamera aus (die einzige Option) </li>
-                <li>drücke auf Verbinden.</li>
-              </ol>
-            </div>
-          </>
+        {Peripherie.hasExternCamera ? (
+          !cameraActive ? (
+            <>
+              <button className="start-button" onClick={handleStartApp}>
+                Start
+              </button>
+              <div className="instructions">
+                <ol>
+                  <li>Drücke Start</li>
+                  <li>Wähle die Kamera aus (die einzige Option)</li>
+                  <li>Drücke auf Verbinden.</li>
+                </ol>
+              </div>
+            </>
+          ) : (
+            <>
+              {!photoTaken ? (
+                <>
+                  <img src={blobURL} alt="Camera Preview" className="camera-preview" />
+                  {showButtons && (
+                    <div className="button-container">
+                      <button className="start-button" onClick={startPhotoCountdown}>
+                        Starte Countdown
+                      </button>
+                      <button className="end-button" onClick={handleEndSession}>
+                        Sitzung beenden
+                      </button>
+                    </div>
+                  )}
+                  {countdown > 0 && <div className="countdown">{countdown}</div>}
+                </>
+              ) : (
+                <>
+                  <img className="camera-preview" src={imageSrc} alt="Captured" />
+                  <div className="button-container">
+                    <button className="start-button" onClick={handleRetakePicture}>
+                      Foto speichern
+                    </button>
+                    <button className="end-button" onClick={handleDeleteLastPhoto}>
+                      Foto verwerfen
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )
         ) : (
           <>
             {!photoTaken ? (
               <>
-                <img src={blobURL} alt="Camera Preview" className="camera-preview" />
-                {showButtons && (
-                  <div className="button-container">
-                    <button className="start-button" onClick={startPhotoCountdown}>
-                      Starte Countdown
-                    </button>
-                    <button className="end-button" onClick={handleEndSession}>
-                      Sitzung beenden
-                    </button>
-                  </div>
-                )}
+                <video ref={videoRef} className="camera-preview" playsInline />
+                <canvas ref={canvasRef} style={{ display: "none" }} />
                 {countdown > 0 && <div className="countdown">{countdown}</div>}
+                <div className="button-container">
+                  <button className="start-button" onClick={handleStartCountdown}>
+                    Starte Countdown
+                  </button>
+                  <button className="end-button" onClick={handleEndSession}>
+                        Sitzung beenden
+                      </button>
+                </div>
               </>
             ) : (
               <>
                 <img className="camera-preview" src={imageSrc} alt="Captured" />
                 <div className="button-container">
-                  <button className="start-button" onClick={handleRetakePicture}>
+                  <button className="start-button" onClick={handleSavePhoto}>
                     Foto speichern
                   </button>
-                  <button className="end-button" onClick={handleDeleteLastPhoto}>
+                  <button
+                    className="end-button"
+                    onClick={() => {
+                      handleRetakeIntern();
+                    }}
+                  >
                     Foto verwerfen
                   </button>
                 </div>
@@ -299,6 +399,6 @@ function PhotoMode() {
       </header>
     </div>
   );
+  
 }
-
 export default PhotoMode;

@@ -185,3 +185,18 @@
 .close-help:hover {
     background-color: #a71d2a;
 }
+
+
+#camera-switch-btn {
+    text-align: right;
+    float: right;
+    font-size: 200%;
+    padding: 20px;
+    opacity: 0.25;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+#camera-switch-btn:hover {
+    opacity: 0.5;
+}
