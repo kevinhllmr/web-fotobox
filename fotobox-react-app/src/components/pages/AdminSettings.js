@@ -4,6 +4,15 @@ import './AdminSettings.css';
 import { useNavigate } from 'react-router-dom';
 import AdminSettingsController from '../controllers/Controller';
 
+/*
+ * =============================
+ * Kontext: Erklärung zum Modul
+ * =============================
+ * Dieses Modul wurde als Passwortschutz von bestimmten Settings zum Debuggen erstellt - diese sind nun nicht mehr nötig
+ * Modul existiert nur noch, weil wir es nicht löschen wollen
+ *
+ */
+
 function AdminSettings({ setIsAuthenticated }) {  // Füge Prop für setIsAuthenticated hinzu
     const navigate = useNavigate();
     const [username, setUsername] = useState('');

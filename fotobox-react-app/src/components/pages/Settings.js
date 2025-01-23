@@ -5,6 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import Peripherie from "../controllers/Peripherie";  // Import der Peripherie-Daten
 import AdminSettingsController, {deleteDataFromIndexedDB} from '../controllers/Controller'; // Import der Controller-Klasse
 
+/*
+ * =============================
+ * Kontext: Erklärung zum Modul
+ * =============================
+ * Dieses Modul wurde als Debugging - Settings erstellt - diese sind nun nicht mehr nötig
+ * Modul existiert nur noch, weil wir es nicht löschen wollen 
+ *
+ */
+
 function Settings({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const controller = new AdminSettingsController();  // Controller instanziieren
