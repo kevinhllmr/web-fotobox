@@ -1,13 +1,16 @@
 {
   "files": {
-    "main.css": "/web-fotobox/static/css/main.4ad417ab.css",
-    "main.js": "/web-fotobox/static/js/main.7a02ce40.js",
+    "main.css": "/web-fotobox/static/css/main.cc7a94e8.css",
+    "main.js": "/web-fotobox/static/js/main.5c39c468.js",
+    "static/js/811.6d28f2b6.chunk.js": "/web-fotobox/static/js/811.6d28f2b6.chunk.js",
+    "static/media/libapi.wasm": "/web-fotobox/static/media/libapi.c980861b9ce1a2b2ea33.wasm",
     "index.html": "/web-fotobox/index.html",
-    "main.4ad417ab.css.map": "/web-fotobox/static/css/main.4ad417ab.css.map",
-    "main.7a02ce40.js.map": "/web-fotobox/static/js/main.7a02ce40.js.map"
+    "main.cc7a94e8.css.map": "/web-fotobox/static/css/main.cc7a94e8.css.map",
+    "main.5c39c468.js.map": "/web-fotobox/static/js/main.5c39c468.js.map",
+    "811.6d28f2b6.chunk.js.map": "/web-fotobox/static/js/811.6d28f2b6.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.4ad417ab.css",
-    "static/js/main.7a02ce40.js"
+    "static/css/main.cc7a94e8.css",
+    "static/js/main.5c39c468.js"
   ]
 }
