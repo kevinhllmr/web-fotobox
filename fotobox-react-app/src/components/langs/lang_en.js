@@ -50,7 +50,7 @@ export function lang_en() {
     }
 
     if(help3) {
-        help3.innerHTML = '<strong>Transfer Images to Phone</strong> (only when the phone is connected to the tablet):<br/>pen the gallery.<br/>Select your desired image.<br/>Press „Send to Smartphone.'
+        help3.innerHTML = '<strong>Transfer Images to Phone</strong> (only when the phone is connected to the tablet):<br/>pen the gallery.<br/>Select your desired image.<br/>Press "Send to Smartphone".'
     }
 
     if(close) {

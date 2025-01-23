@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../../App.css";
 import "./PhotoMode.css";
-import { saveImageToIndexedDB, deleteLastImageFromIndexedDB, startCountdown , takePicture } from "../controllers/Controller.js";
+import { saveImageToIndexedDB, deleteLastImageFromIndexedDB} from "../controllers/Controller.js";
 import { useNavigate } from "react-router-dom";
 import { Camera } from "../build/camera.js"; // Importiere die Camera-Klasse von web-gphoto2
 import WebRTC from '../controllers/WebRTC';
@@ -9,161 +9,109 @@ import Peripherie from '../controllers/Peripherie.js';
 
 function PhotoMode() {
   const navigate = useNavigate();
-  const [camera, setCamera] = useState(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [device, setDevice] = useState(null);
-  const [imageSrc, setImageSrc] = useState(null);
-  const [photoTaken, setPhotoTaken] = useState(false);
-  const [webrtcConnected, setWebrtcConnected] = useState(false);
-  const [showButtons, setButtonsShown] = useState(false);
-  const [timerValue, setTimerValue] = useState(3);
-  const [countdown, setCountdown] = useState(0);
-  const [blobURL, setBlobURL] = useState(null);
-  const [streamIntervalId, setStreamIntervalId] = useState(null); // Intervall-ID für den Stream
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const [camera, setCamera] = useState(null); // State to store the current camera instance
+  const [cameraActive, setCameraActive] = useState(false); // Tracks if the camera is active
+  const [imageSrc, setImageSrc] = useState(null); // Stores the captured image source
+  const [photoTaken, setPhotoTaken] = useState(false); // Indicates if a photo has been taken
+  const [showButtons, setButtonsShown] = useState(false); // Controls the visibility of action buttons
+  const [timerValue, setTimerValue] = useState(3); // Sets the countdown timer value
+  const [countdown, setCountdown] = useState(0); // Tracks the countdown value
+  const [blobURL, setBlobURL] = useState(null); // Stores the blob URL for camera preview
+  const [streamIntervalId, setStreamIntervalId] = useState(null); // Interval ID for managing video stream updates
+  const videoRef = useRef(null); // Reference to the video element
+  const canvasRef = useRef(null); // Reference to the canvas element
 
+  const [webrtcConnected, setWebrtcConnected] = useState(false); // Tracks WebRTC connection status
+  const CHUNK_SIZE = 16000; // 16kB per chunk for WebRTC data
 
   useEffect(() => {
+    // Handle cleanup when the page is reloaded
     const handleUnload = async () => {
-      console.log("Seite wird neugeladen, Kamera wird getrennt.");
-      await cleanupResources();
+      console.log("Page is reloading, disconnecting camera.");
+      await cleanupResourcesGlobal(); // Clean up camera and stream resources
     };
 
-    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("beforeunload", handleUnload); // Add event listener for page unload
 
+    // Check the device used and hide buttons if on phone
     const deviceUsed = localStorage.getItem('deviceUsed');
     if (deviceUsed === 'phone') {
       setButtonsShown(false);
     }
 
+    // Initialize the internal camera if no external camera is available
+    const initializeCameraIntern = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true }); // Get video stream
+
+        if (videoRef.current) {
+          videoRef.current.pause(); // Stop the current video if it's playing
+          videoRef.current.srcObject = null; // Remove the current video source
+        }
+
+        videoRef.current.srcObject = stream; // Set the video stream as the source
+        await videoRef.current.play(); // Start playing the video stream
+        setCameraActive(true); // Mark the camera as active
+      } catch (error) {
+        console.error("Error accessing the camera:", error); // Log any errors
+      }
+    };
+
+    if (!Peripherie.hasExternCamera) {
+      initializeCameraIntern(); // Initialize the internal camera if no external camera is available
+    }
+
+    // Check the WebRTC connection status and adjust button visibility
     const checkWebRTCConnection = () => {
       if (WebRTC.dataChannel && WebRTC.dataChannel.readyState === 'open') {
-        setButtonsShown(false);
+        setButtonsShown(false); // Hide buttons if WebRTC is connected
       } else {
-        setButtonsShown(true);
+        setButtonsShown(true); // Show buttons if WebRTC is not connected
       }
     };
 
     checkWebRTCConnection();
 
+    // Handle incoming data from WebRTC peer
     const peer = WebRTC.peer;
     if (peer) {
       peer.on('data', (data) => {
-        handleIncomingData(data);
+        handleIncomingData(data); // Process incoming data
       });
     }
 
-    WebRTC.onData(handleIncomingData);
+    WebRTC.onData(handleIncomingData); // Set up a handler for WebRTC data events
 
-
-    const initializeInternalCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    
-        if (videoRef.current) {
-          videoRef.current.pause(); // Stoppe das aktuelle Video, falls es läuft
-          videoRef.current.srcObject = null; // Entferne die aktuelle Quelle
-        }
-    
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play(); // Starte das Video
-        setCameraActive(true);
-      } catch (error) {
-        console.error("Fehler beim Zugriff auf die Kamera:", error);
-      }
-    };
-
-    if (!Peripherie.hasExternCamera) {
-      initializeInternalCamera();
-    }
-
+    // Cleanup function for when the component is unmounted
     return () => {
-      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("beforeunload", handleUnload); // Remove the unload event listener
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = videoRef.current.srcObject.getTracks();
-        tracks.forEach((track) => track.stop());
+        tracks.forEach((track) => track.stop()); // Stop all video tracks
       }
     };
-  }, [camera, streamIntervalId]);
+  }, [camera, streamIntervalId]); // Dependencies to trigger the effect
 
-  const cleanupResources = async () => {
-    if (streamIntervalId) {
-      clearInterval(streamIntervalId);
-      setStreamIntervalId(null);
-      console.log("Video-Stream gestoppt.");
-    }
-    if (camera) {
-      try {
-        await camera.disconnect();
-        console.log("Kamera erfolgreich getrennt.");
-        setCamera(null);
-      } catch (error) {
-        console.error("Fehler beim Trennen der Kamera:", error);
-      }
-    }
-  };
 
-  const initializeCamera = async () => {
-    try {
-      console.log("Initializing camera...");
-      const newCamera = new Camera();
-      await Camera.showPicker(); // Zeige den Picker
-      await newCamera.connect(); // Verbinde mit der Kamera
-      setCamera(newCamera);
 
-      console.log("Operations supported by the camera:", await newCamera.getSupportedOps());
-      console.log("Current configuration tree:", await newCamera.getConfig());
-
-      // Vorschau starten
-      setTimeout(async () => {
-        try {
-          const blob = await newCamera.capturePreviewAsBlob();
-          const imgURL = URL.createObjectURL(blob);
-          setBlobURL(imgURL);
-          setCameraActive(true);
-          setButtonsShown(true);
-          startVideoStream(newCamera);
-        } catch (error) {
-          console.error("Fehler beim Abrufen der Kamera-Vorschau:", error);
-        }
-      }, 1000);
-    } catch (error) {
-      console.error("Fehler bei der Kamera-Initialisierung:", error);
-    }
-  };
-
-  const startVideoStream = (camera) => {
-    const intervalId = setInterval(async () => {
-      try {
-        const blob = await camera.capturePreviewAsBlob();
-        const imgURL = URL.createObjectURL(blob);
-        setBlobURL(imgURL);
-      } catch (error) {
-        console.error("Fehler beim Abrufen des Kamera-Streams:", error);
-        clearInterval(intervalId);
-        setStreamIntervalId(null);
-      }
-    }, 50);
-    setStreamIntervalId(intervalId); // Speichere die Intervall-ID
-  };
-
-  const handleStartApp = () => {
-    console.log("Starting camera app...");
-    initializeCamera();
-  };
+/*WEB RTC FUNCTIONS */
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
 
   const handleIncomingData = (data) => {
     const message = JSON.parse(data);
     switch (message.type) {
       case 'startCountdown':
-        startPhotoCountdown();
+        startPhotoCountdownExtern();
         break;
       case 'savePhoto':
-        handleSavePicture();
+        uploadImageToCloud(imageSrc);
         break;
       case 'retryPhoto':
-        handleRetakePicture();
+        handleRetakePictureExtern();
         break;
       case 'photoData':
         handleReceivedPhotoData(message.data);
@@ -172,65 +120,6 @@ function PhotoMode() {
         break;
     }
   };
-
-  const handleRetakePicture = () => {
-    setImageSrc(null);
-    setPhotoTaken(false);
-    setCameraActive(false);
-    setButtonsShown(true);
-    setTimeout(() => {
-      setCameraActive(true);
-    }, 1);
-  };
-
-  const handleDeleteLastPhoto = async () => {
-    console.log("Foto verwerfen...");
-    await deleteLastImageFromIndexedDB();
-    setImageSrc(null); // Bildquelle zurücksetzen
-    setPhotoTaken(false); // Zustand zurücksetzen
-    setButtonsShown(true); // Zeige die Buttons wieder an
-  };
-
-  const handleEndSession = async () => {
-    console.log("Seite wird verlassen, Kamera wird getrennt.");
-    await cleanupResources();
-    navigate("/home/");
-    window.location.reload();
-  };
-
-  const startPhotoCountdown = () => {
-    console.log("Starting photo countdown...");
-    setButtonsShown(false);
-    startCountdown(timerValue, setCountdown, capturePicture);
-  };
-
-  const handleStartCountdown = () => {
-    startCountdown(3, setCountdown, () => {
-      takePicture(videoRef, canvasRef, setImageSrc, setPhotoTaken);
-    });
-  };
-
-  const capturePicture = async () => {
-    if (!camera) {
-      console.error("Kamera ist nicht verbunden.");
-      return;
-    }
-
-    try {
-      console.log("Taking picture...");
-      const file = await camera.captureImageAsFile();
-      saveImageToIndexedDB(file);
-      const imgURL = URL.createObjectURL(file);
-      setImageSrc(imgURL);
-
-      setBlobURL(null);
-      setPhotoTaken(true);
-    } catch (error) {
-      console.error("Fehler beim Aufnehmen des Bildes:", error);
-    }
-  };
-
-  const CHUNK_SIZE = 16000; // 16kB per chunk
 
   const sendPhotoData = (photoDataUrl) => {
     if (WebRTC.dataChannel && WebRTC.dataChannel.readyState === 'open') {
@@ -260,43 +149,6 @@ function PhotoMode() {
     return chunks;
   };
 
-
-  const handleSavePicture = () => {
-    if (Peripherie.cloudAccess) {
-      uploadImageToCloud(imageSrc);
-    } else {
-      downloadImage(imageSrc);
-    }
-  };
-
-  const handleSavePhoto = async () => {
-    if (imageSrc) {
-      const blob = await fetch(imageSrc).then((res) => res.blob());
-      saveImageToIndexedDB(blob);
-      handleRetakeIntern();
-    }
-  };
-
-  const handleRetakeIntern=async () => {
-    setImageSrc(null);
-    setPhotoTaken(false);
-    setButtonsShown(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  
-      if (videoRef.current) {
-        videoRef.current.pause(); // Stoppe das aktuelle Video, falls es läuft
-        videoRef.current.srcObject = null; // Entferne die aktuelle Quelle
-      }
-  
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play(); // Starte das Video
-      setCameraActive(true);
-    } catch (error) {
-      console.error("Fehler beim Zugriff auf die Kamera:", error);
-    }
-  }
-
   const handleReceivedPhotoData = (photoData) => {
     const link = document.createElement('a');
     link.href = photoData;
@@ -306,99 +158,328 @@ function PhotoMode() {
     document.body.removeChild(link);
   };
 
-  return (
-    <div className="PhotoMode">
-      <img
-        id="bg"
-        src={process.env.PUBLIC_URL + "/images/home-bg.png"}
-        alt="Background"
-      />
-      <header className="App-header">
-        {Peripherie.hasExternCamera ? (
-          !cameraActive ? (
-            <>
-              <button className="start-button" onClick={handleStartApp}>
-                Start
-              </button>
-              <div className="instructions">
-                <ol>
-                  <li>Drücke Start</li>
-                  <li>Wähle die Kamera aus (die einzige Option)</li>
-                  <li>Drücke auf Verbinden.</li>
-                </ol>
-              </div>
-            </>
-          ) : (
-            <>
-              {!photoTaken ? (
-                <>
-                  <img src={blobURL} alt="Camera Preview" className="camera-preview" />
-                  {showButtons && (
-                    <div className="button-container">
-                      <button className="start-button" onClick={startPhotoCountdown}>
-                        Starte Countdown
-                      </button>
-                      <button className="end-button" onClick={handleEndSession}>
-                        Sitzung beenden
-                      </button>
-                    </div>
-                  )}
-                  {countdown > 0 && <div className="countdown">{countdown}</div>}
-                </>
-              ) : (
-                <>
-                  <img className="camera-preview" src={imageSrc} alt="Captured" />
-                  <div className="button-container">
-                    <button className="start-button" onClick={handleRetakePicture}>
-                      Foto speichern
-                    </button>
-                    <button className="end-button" onClick={handleDeleteLastPhoto}>
-                      Foto verwerfen
-                    </button>
-                  </div>
-                </>
-              )}
-            </>
-          )
+
+/*Photomode FUNCTIONS EXTERN/INTERN */
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+
+  // Internal Functions
+/*****************************************************************/
+
+// Function to reset the internal camera and prepare for a new photo
+const handleRetakeIntern = async () => {
+  setImageSrc(null); // Clear the current image source
+  setPhotoTaken(false); // Reset photo taken status
+  setButtonsShown(true); // Ensure buttons are displayed
+  try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true }); // Access the video stream
+
+      if (videoRef.current) {
+          videoRef.current.pause(); // Stop the current video if it's playing
+          videoRef.current.srcObject = null; // Remove the current video source
+      }
+
+      videoRef.current.srcObject = stream; // Assign the new video stream
+      await videoRef.current.play(); // Start playing the video stream
+      setCameraActive(true); // Set the camera as active
+  } catch (error) {
+      console.error("Error accessing the camera:", error); // Log any errors during camera access
+  }
+};
+
+// Function to save the currently captured photo to IndexedDB
+const handleSavePhotoIntern = async () => {
+  if (imageSrc) {
+      const blob = await fetch(imageSrc).then((res) => res.blob()); // Convert the image source to a Blob
+      saveImageToIndexedDB(blob); // Save the Blob to IndexedDB
+      handleRetakeIntern(); // Reset the camera for the next photo
+  }
+};
+
+// Function to initiate the countdown before taking a photo
+const handleStartCountdownIntern = () => {
+  startCountdownIntern(3, setCountdown, () => {
+      takePictureIntern(videoRef, canvasRef, setImageSrc, setPhotoTaken); // Take a picture when the countdown ends
+  });
+};
+
+// Function to manage a countdown timer
+function startCountdownIntern(timerValue, setCountdown, takePicture) {
+  setCountdown(timerValue); // Initialize the countdown value
+  const interval = setInterval(() => {
+      setCountdown(prevCountdown => {
+          if (prevCountdown === 1) {
+              clearInterval(interval); // Stop the interval when the countdown reaches 1
+              takePicture(); // Trigger the picture-taking function
+              return 0; // Reset the countdown
+          } else {
+              return prevCountdown - 1; // Decrement the countdown
+          }
+      });
+  }, 1000); // Execute every second
+}
+
+// Function to capture a photo from the video stream
+function takePictureIntern(videoRef, canvasRef, setImageSrc, setPhotoTaken) {
+  if (videoRef.current) {
+      const videoWidth = videoRef.current.videoWidth; // Get the video stream width
+      const videoHeight = videoRef.current.videoHeight; // Get the video stream height
+      const canvas = canvasRef.current;
+      canvas.width = videoWidth; // Set the canvas width
+      canvas.height = videoHeight; // Set the canvas height
+      const context = canvas.getContext('2d'); // Get the 2D drawing context
+      context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight); // Draw the video frame onto the canvas
+      const imageData = canvas.toDataURL('image/png'); // Convert the canvas content to a PNG data URL
+      setImageSrc(imageData); // Update the image source with the captured photo
+      setPhotoTaken(true); // Indicate that a photo has been taken
+  }
+}
+
+  // External Functions
+/*****************************************************************/
+
+// Function to reset the external camera and prepare for a new photo
+const handleRetakePictureExtern = () => {
+  setImageSrc(null); // Clear the current image source
+  setPhotoTaken(false); // Reset photo taken status
+  setCameraActive(false); // Deactivate the camera temporarily
+  setButtonsShown(true); // Show the buttons again
+  setTimeout(() => {
+      setCameraActive(true); // Reactivate the camera after a short delay
+  }, 1);
+};
+
+// Function to delete the last photo from IndexedDB
+const handleDeleteLastPhotoExtern = async () => {
+  console.log("Discarding photo...");
+  await deleteLastImageFromIndexedDB(); // Remove the last photo from the database
+  setImageSrc(null); // Reset the image source
+  setPhotoTaken(false); // Reset photo taken status
+  setButtonsShown(true); // Show the buttons again
+};
+
+// Function to start the countdown for taking a photo
+const startPhotoCountdownExtern = () => {
+  console.log("Starting photo countdown...");
+  setButtonsShown(false); // Hide the buttons during the countdown
+  startCountdownIntern(timerValue, setCountdown, capturePictureExtern); // Start the countdown and trigger photo capture
+};
+
+// Function to capture a picture using the external camera
+const capturePictureExtern = async () => {
+  if (!camera) {
+      console.error("Camera is not connected.");
+      return;
+  }
+
+  try {
+      console.log("Taking picture...");
+      const file = await camera.captureImageAsFile(); // Capture the image as a file
+      saveImageToIndexedDB(file); // Save the captured image to IndexedDB
+      const imgURL = URL.createObjectURL(file); // Generate a URL for the captured image
+      setImageSrc(imgURL); // Set the captured image as the source
+
+      setBlobURL(null); // Clear the preview URL
+      setPhotoTaken(true); // Update the photo taken status
+  } catch (error) {
+      console.error("Error capturing the picture:", error); // Log any errors during photo capture
+  }
+};
+
+// Function to start the external camera application
+const handleStartAppExtern = () => {
+  console.log("Starting camera app...");
+  initializeCameraExtern(); // Initialize the camera
+};
+
+// Function to initialize the external camera
+const initializeCameraExtern = async () => {
+  try {
+      console.log("Initializing camera...");
+      const newCamera = new Camera(); // Create a new camera instance
+      await Camera.showPicker(); // Show the camera picker
+      await newCamera.connect(); // Connect to the selected camera
+      setCamera(newCamera); // Save the connected camera instance
+
+      console.log("Operations supported by the camera:", await newCamera.getSupportedOps()); // Log supported operations
+      console.log("Current configuration tree:", await newCamera.getConfig()); // Log the current configuration
+
+      // Start the preview
+      setTimeout(async () => {
+          try {
+              const blob = await newCamera.capturePreviewAsBlob(); // Capture the preview as a Blob
+              const imgURL = URL.createObjectURL(blob); // Generate a URL for the preview
+              setBlobURL(imgURL); // Set the preview URL
+              setCameraActive(true); // Activate the camera
+              setButtonsShown(true); // Show the buttons
+              startVideoStreamExtern(newCamera); // Start the live video stream
+          } catch (error) {
+              console.error("Error retrieving the camera preview:", error); // Log any errors during preview
+          }
+      }, 1000);
+  } catch (error) {
+      console.error("Error initializing the camera:", error); // Log any errors during initialization
+  }
+};
+
+// Function to start the live video stream from the external camera
+const startVideoStreamExtern = (camera) => {
+  const intervalId = setInterval(async () => {
+      try {
+          const blob = await camera.capturePreviewAsBlob(); // Capture the preview as a Blob
+          const imgURL = URL.createObjectURL(blob); // Generate a URL for the preview
+          setBlobURL(imgURL); // Update the preview URL
+      } catch (error) {
+          console.error("Error retrieving the camera stream:", error); // Log any errors during the video stream
+          clearInterval(intervalId); // Stop the interval if an error occurs
+          setStreamIntervalId(null); // Reset the stream interval ID
+      }
+  }, 50); // Update the preview every 50ms
+  setStreamIntervalId(intervalId); // Save the interval ID for later clearing
+};
+
+  // Global Functions
+/*****************************************************************/
+
+// Function to end the current session and navigate to the home page
+const handleEndSessionGlobal = async () => {
+  console.log("Leaving the page and disconnecting the camera.");
+  await cleanupResourcesGlobal(); // Clean up resources before navigating
+  navigate("/home/"); // Navigate to the home page
+  window.location.reload(); // Reload the page to reset the application state
+};
+
+// Function to clean up global resources, including stopping the video stream and disconnecting the camera
+const cleanupResourcesGlobal = async () => {
+  if (streamIntervalId) {
+      clearInterval(streamIntervalId); // Stop the video stream interval
+      setStreamIntervalId(null); // Reset the interval ID
+      console.log("Video stream stopped.");
+  }
+  if (camera) {
+      try {
+          await camera.disconnect(); // Disconnect the camera
+          console.log("Camera successfully disconnected.");
+          setCamera(null); // Reset the camera instance
+      } catch (error) {
+          console.error("Error while disconnecting the camera:", error); // Log any errors during disconnection
+      }
+  }
+};
+
+
+// Main PhotoMode Component
+return (
+  <div className="PhotoMode">
+    {/* Background image for the PhotoMode screen */}
+    <img
+      id="bg"
+      src={process.env.PUBLIC_URL + "/images/home-bg.png"}
+      alt="Background"
+    />
+    <header className="App-header">
+      {/* Check if an external camera is available */}
+      {Peripherie.hasExternCamera ? (
+        !cameraActive ? (
+          <>
+            {/* Show start button and instructions if the camera is not active */}
+            <button className="start-button" onClick={handleStartAppExtern}>
+              Start
+            </button>
+            <div className="instructions">
+              <ol>
+                <li>Press Start</li>
+                <li>Select the camera (only option available)</li>
+                <li>Press Connect.</li>
+              </ol>
+            </div>
+            <div className="footer">
+              {/* End session and go back */}
+              <p id="back-button" onClick={handleEndSessionGlobal}>Back</p>
+            </div>
+          </>
         ) : (
           <>
+            {/* Display camera preview if the camera is active but no photo has been taken */}
             {!photoTaken ? (
               <>
-                <video ref={videoRef} className="camera-preview" playsInline />
-                <canvas ref={canvasRef} style={{ display: "none" }} />
+                <img src={blobURL} alt="Camera Preview" className="camera-preview" />
+                {showButtons && (
+                  <div className="button-container">
+                    <button className="start-button" onClick={startPhotoCountdownExtern}>
+                      Start Countdown
+                    </button>
+                    <button className="end-button" onClick={handleEndSessionGlobal}>
+                      End Session
+                    </button>
+                  </div>
+                )}
+                {/* Show countdown timer if active */}
                 {countdown > 0 && <div className="countdown">{countdown}</div>}
-                <div className="button-container">
-                  <button className="start-button" onClick={handleStartCountdown}>
-                    Starte Countdown
-                  </button>
-                  <button className="end-button" onClick={handleEndSession}>
-                        Sitzung beenden
-                      </button>
-                </div>
               </>
             ) : (
               <>
+                {/* Display the captured image and provide options to save or discard */}
                 <img className="camera-preview" src={imageSrc} alt="Captured" />
                 <div className="button-container">
-                  <button className="start-button" onClick={handleSavePhoto}>
-                    Foto speichern
+                  <button className="start-button" onClick={handleRetakePictureExtern}>
+                    Save Photo
                   </button>
-                  <button
-                    className="end-button"
-                    onClick={() => {
-                      handleRetakeIntern();
-                    }}
-                  >
-                    Foto verwerfen
+                  <button className="end-button" onClick={handleDeleteLastPhotoExtern}>
+                    Discard Photo
                   </button>
                 </div>
               </>
             )}
           </>
-        )}
-      </header>
-    </div>
-  );
-  
+        )
+      ) : (
+        <>
+          {/* Logic for the internal camera (no external camera available) */}
+          {!photoTaken ? (
+            <>
+              {/* Display video feed for the camera preview */}
+              <video ref={videoRef} className="camera-preview" playsInline />
+              {/* Hidden canvas for image processing */}
+              <canvas ref={canvasRef} style={{ display: "none" }} />
+              {/* Show countdown timer if active */}
+              {countdown > 0 && <div className="countdown">{countdown}</div>}
+              <div className="button-container">
+                <button className="start-button" onClick={handleStartCountdownIntern}>
+                  Start Countdown
+                </button>
+                <button className="end-button" onClick={handleEndSessionGlobal}>
+                  End Session
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Display the captured image and provide options to save or retake */}
+              <img className="camera-preview" src={imageSrc} alt="Captured" />
+              <div className="button-container">
+                <button className="start-button" onClick={handleSavePhotoIntern}>
+                  Save Photo
+                </button>
+                <button
+                  className="end-button"
+                  onClick={() => {
+                    handleRetakeIntern();
+                  }}
+                >
+                  Discard Photo
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </header>
+  </div>
+);
+
 }
 export default PhotoMode;
