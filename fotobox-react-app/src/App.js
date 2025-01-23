@@ -3,7 +3,7 @@ import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 import MainPage from './components/pages/MainPage';
 import PhotoMode from './components/pages/PhotoMode';
-// import ConnectPhone from './components/pages/ConnectPhone';
+import ConnectPhone from './components/pages/ConnectPhone';
 import RemoteControl from './components/pages/RemoteControl';
 import AdminSettings from './components/pages/AdminSettings';
 import CloudAccess from './components/pages/CloudAccess'; 
@@ -21,7 +21,7 @@ const App = () => {
           <Route path='/' element={<MainPage />} />
           <Route path='/home/' element={<MainPage />} />
           <Route path='/photomode/' element={<PhotoMode />} />
-          {/* <Route path='/connectphone/' element={<ConnectPhone />} /> */}
+          <Route path='/connectphone/' element={<ConnectPhone />} />
           <Route path='/connect/' element={<Connect />} />
           <Route path='/remote/' element={<RemoteControl />} />
           <Route path='/gallery/' element={<CloudAccess />} />

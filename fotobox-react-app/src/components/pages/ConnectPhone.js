@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPeer, createAnswer, setRemoteDescription, sendMessage, copyToClipboard } from '../controllers/WebRTC'; // Adjust the import path
+import WebRTC from '../controllers/WebRTC';
 import '../../App.css';
 import './ConnectPhone.css';
-import { FaCopy, FaWifi } from 'react-icons/fa';
-import { handleScan, handleWrite } from '../controllers/WebNFC';
-import pako from "pako";
-
+import { FaCopy } from 'react-icons/fa';
 
 const ConnectPhone = () => {
     const [width, setWidth] = useState(window.innerWidth);
@@ -29,87 +26,9 @@ const ConnectPhone = () => {
         return () => window.removeEventListener('resize', handleWindowSizeChange);
     }, [width]);
 
-    // Tablet: Write the offer JSON to the NFC tag
-    const handleWriteOfferToNFC = () => {
-        if (offer.trim() !== '') {
-            if ('NDEFReader' in window) {
-                handleWrite(offer)
-                    .then(() => {
-                        alert('Successfully wrote Offer JSON to the NFC tag!');
-                    })
-                    .catch(error => {
-                        console.error('Failed to write data to NFC tag:', error);
-                        alert(error);
-                        alert('Failed to write data to NFC tag. Please try again.');
-                    });
-            } else {
-                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
-            }
-        } else {
-            alert('Offer JSON is empty, please input valid content before writing.');
-        }
-    };
-    
-
-
-    // Mobile: Scan NFC and copy the content into the offer JSON text box
-    const handleScanOfferFromNFC = async () => {
-        if ('NDEFReader' in window){
-            await handleScan(setOffer);
-        }
-        else{
-            alert("NFC read failed. Please try again or use a device with NFC support.");
-            return;
-        }
-        
-    };
-
-    // Tablet: Scan NFC and copy the content to the answer JSON text box
-    const handleScanAnswerFromNFC = async () => {
-        if (!isMobile) {
-            if ('NDEFReader' in window)
-            {
-                    try {
-                    await handleScan(setAnswer);
-                    alert('Successfully read Answer from NFC tag!');
-                    if (answer) {
-                        handleSetRemoteDescription();
-                    }
-                } catch (error) {
-                    console.error('Failed to read Answer from NFC:', error);
-                }   
-            }else{
-                alert("NFC read failed. Please try again or use a device with NFC support.");
-            }
-
-        }
-    };
-
-    // Mobile: Write the answer JSON to the NFC tag
-    const handleWriteAnswerToNFC = () => {
-        if (offer.trim() !== '') {
-            if ('NDEFReader' in window) {
-                handleWrite(answer)
-                    .then(() => {
-                        alert('Successfully wrote Answer JSON to the NFC tag!');
-                    })
-                    .catch(error => {
-                        console.error('Failed to write data to NFC tag:', error);
-                        alert(error);
-                        alert('Failed to write data to NFC tag. Please try again.');
-                    });
-            } else {
-                alert("Your device does not support NFC functionality! Or your browser does not support the webnfc function");
-            }
-        } else {
-            alert('Offer JSON is empty, please input valid content before writing.');
-        }
-    };
-
-
     useEffect(() => {
         if (!isMobile) {
-            const newPeer = createPeer(
+            const newPeer = WebRTC.createPeer(
                 true,
                 (data) => {
                     setOffer(JSON.stringify(data));
@@ -126,19 +45,12 @@ const ConnectPhone = () => {
                 }
             );
             setPeer(newPeer);
-        } else {
-            console.log('Mobile device detected.')
         }
     }, [isMobile]);
 
-    useEffect(() => {
-        if (isMobile && offer) {
-            handleGenerateAnswer();
-        }
-    }, [isMobile, offer]);
     const handleGenerateAnswer = () => {
         if (offer) {
-            const newPeer = createAnswer(
+            const newPeer = WebRTC.createAnswer(
                 offer,
                 (data) => {
                     setAnswer(data);
@@ -155,27 +67,27 @@ const ConnectPhone = () => {
             );
             setPeer(newPeer);
         } else {
-            // console.log('No offer available to generate an answer.');
+            console.log('No offer available to generate an answer.');
         }
     };
 
     const handleSetRemoteDescription = () => {
         if (peer && answer) {
-            setRemoteDescription(peer, answer);
+            WebRTC.setRemoteDescription(answer);
             setRemoteDescriptionSet(true);
             alert('Data channel should be established.');
         } else {
-            // console.log('No peer or answer available to set remote description.');
+            console.log('No peer or answer available to set remote description.');
         }
     };
 
     const handleSendMessage = () => {
         if (dataChannel && input.trim() !== '') {
-            sendMessage(dataChannel, input);
+            WebRTC.sendMessage(input);
             setMessages(prevMessages => [...prevMessages, { text: input, sender: 'You' }]);
             setInput('');
         } else {
-            // console.log('No data channel or empty message.');
+            console.log('No data channel or empty message.');
         }
     };
 
@@ -184,19 +96,6 @@ const ConnectPhone = () => {
             handleSendMessage();
         }
     };
-
-    const testCompression = () => {
-    const jsonString = JSON.stringify({ key: "value" });
-    const compressed = pako.gzip(jsonString);
-    const decompressed = pako.ungzip(compressed, { to: "string" });
-
-    console.log("Original:", jsonString);
-    console.log("Compressed:", compressed);
-    console.log("Decompressed:", decompressed);
-    };
-
-    testCompression();
-
 
     return (
         <div className={isMobile ? "mobile" : "desktop"}>
@@ -209,16 +108,9 @@ const ConnectPhone = () => {
                         onChange={e => setOffer(e.target.value)}
                         placeholder="Paste offer JSON here"
                     />
-                    <button className="copy-icon" onClick={() => copyToClipboard(offer)}>
+                    <button className="copy-icon" onClick={() => WebRTC.copyToClipboard(offer)}>
                         <FaCopy />
                     </button>
-                    <button
-                    className="nfc-button"
-                    onClick={isMobile ? handleScanOfferFromNFC : handleWriteOfferToNFC}
-                >
-                    {isMobile ? 'Scanning NFCTag to Offer Json' : 'Write Offer to NFC Tag'}
-                    <FaWifi />
-                </button>
                 </div>
                 <div className="answer">
                     <label>Answer JSON:</label>
@@ -229,16 +121,9 @@ const ConnectPhone = () => {
                         rows={4}
                         cols={50}
                     />
-                    <button className="copy-icon" onClick={() => copyToClipboard(answer)}>
+                    <button className="copy-icon" onClick={() => WebRTC.copyToClipboard(answer)}>
                         <FaCopy />
                     </button>
-                    <button
-                    className="nfc-button"
-                    onClick={isMobile ? handleWriteAnswerToNFC : handleScanAnswerFromNFC}
-                >
-                    {isMobile ? 'Write Answer to NFC Tag' : 'Scanning NFCTag to Answer Json'}
-                    <FaWifi />
-                </button>
                 </div>
                 {!isMobile && (
                     <button onClick={handleSetRemoteDescription} disabled={remoteDescriptionSet}>
